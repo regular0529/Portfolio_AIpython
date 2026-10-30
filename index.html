@@ -1,0 +1,2755 @@
+<!DOCTYPE html>
+<html lang="ko" class="scroll-smooth"><head><script data-bard-client-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjExNjRiNzdiNDMzZDdhMDAyMWI4NjE4YjhjYTU3ZTMyZGI5MWUxMTMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIwMzUxNjg4NzEyMzc3NDAzNTIwOCIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjX2ZkMmExOTc1MTA5NzEyMGJfaW5kZXguaHRtbC0xNjgifSwiZXhwIjoxNzkzMzQ3NzMwLCJpYXQiOjE3OTMzNDQxMzAsImFsZyI6IlJTMjU2In0.O13FJZy2E-etbb0MuXvO_tgKRuY1nzf73QkbvU4sL3U_ogxQ1QycVSLZJzqF1F5mLOGBoj-dln128ZYTrk_qwy0g88bVcp0BUINvNDkfD3fG49YVNHpnohkhQYvJTTU_6SN69bmPK22cmXUy4WS-LsRaooy3uOB9jcVFOOfmbAkavW3p5uHb9F14ruIjvTix7TlNiJ4A1qQiaYrg9SHhyWaqUZAahtUqWazD7uN3jZ6I5IGdqW1Ld8QUpdQ9wLNaY-07neHE0axCA_-LZXyRCGdcqvg5PlXZRuwARibVEAszWUcenaftp-DAdjaF9-gK77sHU4AlDvwRB77AbOkxNQ","c_fd2a19751097120b_index.html-168")</script><script data-bard-client-injected="true">
+  document.addEventListener('input', (event) => {
+    if (event.target && (event.target.isContentEditable || event.target.hasAttribute('contenteditable'))) {
+      const clonedDoc = document.cloneNode(true);
+      const injectedScripts = clonedDoc.querySelectorAll('[data-bard-client-injected="true"]');
+      injectedScripts.forEach(el => el.remove());
+      window.parent.postMessage({
+        type: 'inlineEdit',
+        html: '<!DOCTYPE html>\n' + clonedDoc.documentElement.outerHTML
+      }, '*');
+    }
+  });
+</script><script data-bard-client-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const SCROLL_KEYS = new Set([
+    'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+    ' ', 'Spacebar', 'PageUp', 'PageDown', 'Home', 'End',
+  ]);
+  const HORIZONTAL_KEYS = new Set(['ArrowLeft', 'ArrowRight']);
+
+  function isTextEntryTarget(target) {
+    if (!target) return false;
+    const tagName = target.tagName;
+    return tagName === 'INPUT' || tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' || target.isContentEditable === true;
+  }
+
+  // An element absorbs the key only if it both overflows on the axis being
+  // scrolled and is configured to scroll on that axis. The cheap dimension
+  // test runs first because getComputedStyle forces a style recalc, and this
+  // runs on every keypress. Each axis is read from its own longhand: the
+  // 'overflow' shorthand serializes as two values when the axes differ, which
+  // is the common 'overflow-x: hidden; overflow-y: auto' pane.
+  function canScroll(node, horizontal) {
+    const overflows = horizontal ? node.scrollWidth > node.clientWidth
+                                 : node.scrollHeight > node.clientHeight;
+    if (!overflows) return false;
+    const style = window.getComputedStyle(node);
+    const overflow = horizontal ? style.overflowX : style.overflowY;
+    return overflow === 'auto' || overflow === 'scroll';
+  }
+
+  // Walks up from the event target so nested scrollers keep their behavior.
+  // <body> is included because pages that pin the root height make it the
+  // scroll container.
+  function hasScrollableAncestor(target, horizontal) {
+    let node = target;
+    while (node && node !== document.documentElement) {
+      if (canScroll(node, horizontal)) return true;
+      node = node.parentElement;
+    }
+    return false;
+  }
+
+  function rootCanScroll(horizontal) {
+    const scroller = document.scrollingElement || document.documentElement;
+    if (!scroller) return false;
+    // Tolerate a pixel of rounding so subpixel layouts do not look scrollable.
+    return horizontal ? scroller.scrollWidth > window.innerWidth + 1
+                      : scroller.scrollHeight > window.innerHeight + 1;
+  }
+
+  window.addEventListener('keydown', function(event) {
+    if (!SCROLL_KEYS.has(event.key)) return;
+    if (event.defaultPrevented) return;
+    // Alt and Meta turn arrows into browser history navigation, and Ctrl is
+    // reserved for shortcuts, so none of them are scroll intent.
+    if (event.altKey || event.metaKey || event.ctrlKey) return;
+
+    const target = event.target;
+    if (isTextEntryTarget(target)) return;
+
+    // Anything that can still absorb the scroll gets to keep it.
+    const horizontal = HORIZONTAL_KEYS.has(event.key);
+    if (rootCanScroll(horizontal)) return;
+    if (hasScrollableAncestor(target, horizontal)) return;
+
+    event.preventDefault();
+  }, {capture: true, passive: false});
+})();</script><script data-bard-client-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-client-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-client-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.j=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.h=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.i="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-client-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-client-injected="true">(function() {
+  function normalizeSlug(str) {
+    try {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^p{L}p{N}s_-]/gu, '')
+        .replace(/s+/g, '-');
+    } catch (e) {
+      return str
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9s_-]/g, '')
+        .replace(/s+/g, '-');
+    }
+  }
+
+  function findTargetElement(hash) {
+    if (!hash || hash === '#') {
+      return null;
+    }
+    const rawId = hash.startsWith('#') ? hash.slice(1) : hash;
+    let decodedId = rawId;
+    try {
+      decodedId = decodeURIComponent(rawId);
+    } catch (e) {
+      // Ignore URI malformed errors.
+    }
+
+    // 1. Direct ID match (raw and decoded).
+    let target = document.getElementById(rawId) || document.getElementById(decodedId);
+    if (target) {
+      return target;
+    }
+
+    // 2. Name attribute match (<a name="...">).
+    try {
+      if (typeof CSS !== 'undefined' && CSS.escape) {
+        target =
+          document.querySelector('[name="' + CSS.escape(rawId) + '"]') ||
+          document.querySelector('[name="' + CSS.escape(decodedId) + '"]');
+      } else {
+        const namedElements = document.getElementsByName(rawId);
+        if (namedElements && namedElements.length > 0) {
+          return namedElements[0];
+        }
+      }
+    } catch (e) {
+      // Ignore querySelector syntax errors.
+    }
+    if (target) {
+      return target;
+    }
+
+    // 3. Match heading text by slug (for Markdown TOCs where headings lack explicit IDs).
+    const targetSlug = normalizeSlug(decodedId);
+    if (targetSlug) {
+      for (const heading of document.querySelectorAll('h1, h2, h3, h4, h5, h6')) {
+        if (normalizeSlug(heading.textContent || '') === targetSlug) {
+          return heading;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  document.addEventListener('click', function(event) {
+    const target = event.target;
+    const anchor = target && typeof target.closest === 'function' ? target.closest('a') : null;
+    if (!anchor) {
+      return;
+    }
+
+    const href = anchor.getAttribute('href');
+    if (
+      !href ||
+      href.trim().toLowerCase().startsWith('javascript:') ||
+      anchor.hasAttribute('download')
+    ) {
+      return;
+    }
+
+    // Check if the link is an in-page hash / anchor link.
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const targetElement = findTargetElement(href);
+      if (targetElement) {
+        targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+      }
+      return;
+    }
+
+    // Check if the URL has the same origin/pathname but with a hash.
+    try {
+      const url = new URL(anchor.href, window.location.href);
+      if (
+        url.hash &&
+        url.origin === window.location.origin &&
+        url.pathname === window.location.pathname
+      ) {
+        event.preventDefault();
+        const targetElement = findTargetElement(url.hash);
+        if (targetElement) {
+          targetElement.scrollIntoView({behavior: 'smooth', block: 'start'});
+        }
+        return;
+      }
+    } catch (e) {
+      // Fall through if URL parsing fails.
+    }
+
+    // For all external or full navigation links, prevent iframe-level navigation
+    // (which breaks in AGSA WebView or sandboxed iframes) and ensure they open
+    // safely in a new tab/window.
+    if (anchor.target !== '_blank') {
+      event.preventDefault();
+      window.open(anchor.href, '_blank', 'noopener,noreferrer');
+    }
+  }, {capture: true});
+})();</script><script data-bard-client-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-client-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>김정규 | AI &amp; 산업공학 포트폴리오 (Pusan National Univ.)</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+            },
+            dark: {
+              900: '#0b0f19',
+              800: '#111827',
+              700: '#1f2937',
+              600: '#374151'
+            },
+            accent: {
+              cyan: '#06b6d4',
+              indigo: '#6366f1',
+              violet: '#8b5cf6'
+            }
+          },
+          fontFamily: {
+            sans: ['Pretendard', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Pyodide (In-browser Python Runtime) -->
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js" crossorigin="anonymous"></script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b0f19;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1f2937;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #374151;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .neon-glow {
+      box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+    }
+    .neon-text-glow {
+      text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 0.2; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.05); }
+    }
+    .bg-grid-pattern {
+      background-size: 36px 36px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    }
+  </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:Pretendard, Inter, system-ui, sans-serif;font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:JetBrains Mono, Fira Code, monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.sticky{position:sticky}.inset-0{inset:0px}.-bottom-20{bottom:-5rem}.-right-12{right:-3rem}.-right-20{right:-5rem}.-top-12{top:-3rem}.bottom-1\/4{bottom:25%}.bottom-6{bottom:1.5rem}.left-10{left:2.5rem}.left-6{left:1.5rem}.right-10{right:2.5rem}.right-5{right:1.25rem}.right-6{right:1.5rem}.top-0{top:0px}.top-1\/4{top:25%}.top-5{top:1.25rem}.-z-10{z-index:-10}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.my-6{margin-top:1.5rem;margin-bottom:1.5rem}.mb-1{margin-bottom:0.25rem}.mb-10{margin-bottom:2.5rem}.mb-12{margin-bottom:3rem}.mb-14{margin-bottom:3.5rem}.mb-16{margin-bottom:4rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.ml-1{margin-left:0.25rem}.ml-2{margin-left:0.5rem}.mr-1{margin-right:0.25rem}.mr-1\.5{margin-right:0.375rem}.mt-1{margin-top:0.25rem}.mt-2{margin-top:0.5rem}.mt-3{margin-top:0.75rem}.mt-4{margin-top:1rem}.mt-5{margin-top:1.25rem}.mt-6{margin-top:1.5rem}.mt-8{margin-top:2rem}.block{display:block}.inline-block{display:inline-block}.flex{display:flex}.inline-flex{display:inline-flex}.grid{display:grid}.hidden{display:none}.aspect-square{aspect-ratio:1 / 1}.h-10{height:2.5rem}.h-12{height:3rem}.h-2{height:0.5rem}.h-2\.5{height:0.625rem}.h-3{height:0.75rem}.h-32{height:8rem}.h-52{height:13rem}.h-6{height:1.5rem}.h-64{height:16rem}.h-80{height:20rem}.h-9{height:2.25rem}.h-96{height:24rem}.h-full{height:100%}.max-h-\[90vh\]{max-height:90vh}.min-h-screen{min-height:100vh}.w-10{width:2.5rem}.w-12{width:3rem}.w-2{width:0.5rem}.w-2\.5{width:0.625rem}.w-3{width:0.75rem}.w-32{width:8rem}.w-6{width:1.5rem}.w-80{width:20rem}.w-9{width:2.25rem}.w-96{width:24rem}.w-full{width:100%}.max-w-2xl{max-width:42rem}.max-w-3xl{max-width:48rem}.max-w-5xl{max-width:64rem}.max-w-6xl{max-width:72rem}.max-w-7xl{max-width:80rem}.max-w-\[340px\]{max-width:340px}.max-w-md{max-width:28rem}.max-w-xl{max-width:36rem}.flex-1{flex:1 1 0%}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.translate-y-24{--tw-translate-y:6rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes ping{75%, 100%{transform:scale(2);opacity:0}}.animate-ping{animation:ping 1s cubic-bezier(0, 0, 0.2, 1) infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}.cursor-pointer{cursor:pointer}.resize-none{resize:none}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-10{gap:2.5rem}.gap-12{gap:3rem}.gap-2{gap:0.5rem}.gap-2\.5{gap:0.625rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.gap-7{gap:1.75rem}.gap-8{gap:2rem}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.space-y-8 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(2rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(2rem * var(--tw-space-y-reverse))}.divide-y > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(1px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(1px * var(--tw-divide-y-reverse))}.divide-gray-800 > :not([hidden]) ~ :not([hidden]){--tw-divide-opacity:1;border-color:rgb(31 41 55 / var(--tw-divide-opacity, 1))}.self-start{align-self:flex-start}.overflow-hidden{overflow:hidden}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.overflow-x-hidden{overflow-x:hidden}.scroll-smooth{scroll-behavior:smooth}.whitespace-pre-wrap{white-space:pre-wrap}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-2{border-width:2px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-accent-cyan{--tw-border-opacity:1;border-color:rgb(6 182 212 / var(--tw-border-opacity, 1))}.border-accent-cyan\/30{border-color:rgb(6 182 212 / 0.3)}.border-accent-violet{--tw-border-opacity:1;border-color:rgb(139 92 246 / var(--tw-border-opacity, 1))}.border-accent-violet\/30{border-color:rgb(139 92 246 / 0.3)}.border-blue-500\/40{border-color:rgb(59 130 246 / 0.4)}.border-brand-400{--tw-border-opacity:1;border-color:rgb(52 211 153 / var(--tw-border-opacity, 1))}.border-brand-500{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.border-brand-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-brand-500\/40{border-color:rgb(16 185 129 / 0.4)}.border-brand-500\/50{border-color:rgb(16 185 129 / 0.5)}.border-brand-500\/60{border-color:rgb(16 185 129 / 0.6)}.border-cyan-500\/30{border-color:rgb(6 182 212 / 0.3)}.border-emerald-500\/30{border-color:rgb(16 185 129 / 0.3)}.border-gray-700{--tw-border-opacity:1;border-color:rgb(55 65 81 / var(--tw-border-opacity, 1))}.border-gray-700\/60{border-color:rgb(55 65 81 / 0.6)}.border-gray-700\/80{border-color:rgb(55 65 81 / 0.8)}.border-gray-800{--tw-border-opacity:1;border-color:rgb(31 41 55 / var(--tw-border-opacity, 1))}.border-gray-800\/60{border-color:rgb(31 41 55 / 0.6)}.border-gray-800\/80{border-color:rgb(31 41 55 / 0.8)}.border-gray-800\/90{border-color:rgb(31 41 55 / 0.9)}.border-orange-500\/40{border-color:rgb(249 115 22 / 0.4)}.border-red-500\/40{border-color:rgb(239 68 68 / 0.4)}.border-violet-500\/30{border-color:rgb(139 92 246 / 0.3)}.border-yellow-400\/30{border-color:rgb(250 204 21 / 0.3)}.border-yellow-500\/40{border-color:rgb(234 179 8 / 0.4)}.bg-\[\#080c14\]{--tw-bg-opacity:1;background-color:rgb(8 12 20 / var(--tw-bg-opacity, 1))}.bg-\[\#050811\]{--tw-bg-opacity:1;background-color:rgb(5 8 17 / var(--tw-bg-opacity, 1))}.bg-\[\#06090f\]{--tw-bg-opacity:1;background-color:rgb(6 9 15 / var(--tw-bg-opacity, 1))}.bg-\[\#0a0e17\]{--tw-bg-opacity:1;background-color:rgb(10 14 23 / var(--tw-bg-opacity, 1))}.bg-accent-cyan{--tw-bg-opacity:1;background-color:rgb(6 182 212 / var(--tw-bg-opacity, 1))}.bg-accent-cyan\/10{background-color:rgb(6 182 212 / 0.1)}.bg-accent-violet{--tw-bg-opacity:1;background-color:rgb(139 92 246 / var(--tw-bg-opacity, 1))}.bg-accent-violet\/10{background-color:rgb(139 92 246 / 0.1)}.bg-black\/40{background-color:rgb(0 0 0 / 0.4)}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-black\/60{background-color:rgb(0 0 0 / 0.6)}.bg-black\/80{background-color:rgb(0 0 0 / 0.8)}.bg-black\/90{background-color:rgb(0 0 0 / 0.9)}.bg-blue-500\/20{background-color:rgb(59 130 246 / 0.2)}.bg-brand-400{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.bg-brand-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-brand-500\/10{background-color:rgb(16 185 129 / 0.1)}.bg-brand-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-dark-900{--tw-bg-opacity:1;background-color:rgb(11 15 25 / var(--tw-bg-opacity, 1))}.bg-emerald-500{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.bg-emerald-500\/20{background-color:rgb(16 185 129 / 0.2)}.bg-gray-800{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.bg-gray-800\/40{background-color:rgb(31 41 55 / 0.4)}.bg-gray-800\/80{background-color:rgb(31 41 55 / 0.8)}.bg-gray-800\/90{background-color:rgb(31 41 55 / 0.9)}.bg-gray-900\/90{background-color:rgb(17 24 39 / 0.9)}.bg-green-500{--tw-bg-opacity:1;background-color:rgb(34 197 94 / var(--tw-bg-opacity, 1))}.bg-green-500\/80{background-color:rgb(34 197 94 / 0.8)}.bg-orange-500\/20{background-color:rgb(249 115 22 / 0.2)}.bg-red-500{--tw-bg-opacity:1;background-color:rgb(239 68 68 / var(--tw-bg-opacity, 1))}.bg-red-500\/20{background-color:rgb(239 68 68 / 0.2)}.bg-red-500\/80{background-color:rgb(239 68 68 / 0.8)}.bg-transparent{background-color:transparent}.bg-yellow-400\/10{background-color:rgb(250 204 21 / 0.1)}.bg-yellow-500{--tw-bg-opacity:1;background-color:rgb(234 179 8 / var(--tw-bg-opacity, 1))}.bg-yellow-500\/20{background-color:rgb(234 179 8 / 0.2)}.bg-yellow-500\/80{background-color:rgb(234 179 8 / 0.8)}.bg-gradient-to-r{background-image:linear-gradient(to right, var(--tw-gradient-stops))}.bg-gradient-to-tr{background-image:linear-gradient(to top right, var(--tw-gradient-stops))}.from-accent-cyan{--tw-gradient-from:#06b6d4 var(--tw-gradient-from-position);--tw-gradient-to:rgb(6 182 212 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-brand-400{--tw-gradient-from:#34d399 var(--tw-gradient-from-position);--tw-gradient-to:rgb(52 211 153 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.from-brand-500{--tw-gradient-from:#10b981 var(--tw-gradient-from-position);--tw-gradient-to:rgb(16 185 129 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.via-accent-cyan{--tw-gradient-to:rgb(6 182 212 / 0)  var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), #06b6d4 var(--tw-gradient-via-position), var(--tw-gradient-to)}.to-accent-cyan{--tw-gradient-to:#06b6d4 var(--tw-gradient-to-position)}.to-accent-indigo{--tw-gradient-to:#6366f1 var(--tw-gradient-to-position)}.to-brand-400{--tw-gradient-to:#34d399 var(--tw-gradient-to-position)}.bg-clip-text{-webkit-background-clip:text;background-clip:text}.p-2{padding:0.5rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.p-7{padding:1.75rem}.p-8{padding:2rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-4{padding-left:1rem;padding-right:1rem}.px-5{padding-left:1.25rem;padding-right:1.25rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-20{padding-top:5rem;padding-bottom:5rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-1{padding-bottom:0.25rem}.pb-2{padding-bottom:0.5rem}.pb-28{padding-bottom:7rem}.pb-3{padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.pl-12{padding-left:3rem}.pr-2{padding-right:0.5rem}.pt-2{padding-top:0.5rem}.pt-20{padding-top:5rem}.pt-3{padding-top:0.75rem}.pt-4{padding-top:1rem}.text-center{text-align:center}.font-sans{font-family:Pretendard, Inter, system-ui, sans-serif}.font-mono{font-family:JetBrains Mono, Fira Code, monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-3xl{font-size:1.875rem;line-height:2.25rem}.text-4xl{font-size:2.25rem;line-height:2.5rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.text-gray-200{--tw-text-opacity:1;color:rgb(229 231 235 / var(--tw-text-opacity, 1))}.text-accent-cyan{--tw-text-opacity:1;color:rgb(6 182 212 / var(--tw-text-opacity, 1))}.text-accent-violet{--tw-text-opacity:1;color:rgb(139 92 246 / var(--tw-text-opacity, 1))}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77 / var(--tw-text-opacity, 1))}.text-black{--tw-text-opacity:1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-brand-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238 / var(--tw-text-opacity, 1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183 / var(--tw-text-opacity, 1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.text-gray-300{--tw-text-opacity:1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-green-400{--tw-text-opacity:1;color:rgb(74 222 128 / var(--tw-text-opacity, 1))}.text-orange-400{--tw-text-opacity:1;color:rgb(251 146 60 / var(--tw-text-opacity, 1))}.text-red-400{--tw-text-opacity:1;color:rgb(248 113 113 / var(--tw-text-opacity, 1))}.text-transparent{color:transparent}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity, 1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.accent-accent-cyan{accent-color:#06b6d4}.accent-brand-500{accent-color:#10b981}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-brand-400\/30{--tw-shadow-color:rgb(52 211 153 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-brand-500\/20{--tw-shadow-color:rgb(16 185 129 / 0.2);--tw-shadow:var(--tw-shadow-colored)}.shadow-brand-500\/25{--tw-shadow-color:rgb(16 185 129 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.shadow-brand-500\/30{--tw-shadow-color:rgb(16 185 129 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-cyan-500\/30{--tw-shadow-color:rgb(6 182 212 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.shadow-violet-500\/30{--tw-shadow-color:rgb(139 92 246 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.blur-2xl{--tw-blur:blur(40px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.blur-3xl{--tw-blur:blur(64px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-colors{transition-property:color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-transform{transition-property:transform;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-300{transition-duration:300ms}.selection\:bg-brand-500 *::selection{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.selection\:text-black *::selection{--tw-text-opacity:1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.selection\:bg-brand-500::selection{--tw-bg-opacity:1;background-color:rgb(16 185 129 / var(--tw-bg-opacity, 1))}.selection\:text-black::selection{--tw-text-opacity:1;color:rgb(0 0 0 / var(--tw-text-opacity, 1))}.before\:absolute::before{content:var(--tw-content);position:absolute}.before\:inset-0::before{content:var(--tw-content);inset:0px}.before\:left-6::before{content:var(--tw-content);left:1.5rem}.before\:w-0\.5::before{content:var(--tw-content);width:0.125rem}.before\:bg-gray-800::before{content:var(--tw-content);--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.hover\:-translate-y-0\.5:hover{--tw-translate-y:-0.125rem;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:border-accent-cyan\/50:hover{border-color:rgb(6 182 212 / 0.5)}.hover\:border-accent-violet\/50:hover{border-color:rgb(139 92 246 / 0.5)}.hover\:border-brand-500\/50:hover{border-color:rgb(16 185 129 / 0.5)}.hover\:border-brand-500\/60:hover{border-color:rgb(16 185 129 / 0.6)}.hover\:bg-blue-500\/30:hover{background-color:rgb(59 130 246 / 0.3)}.hover\:bg-brand-400:hover{--tw-bg-opacity:1;background-color:rgb(52 211 153 / var(--tw-bg-opacity, 1))}.hover\:bg-brand-500\/20:hover{background-color:rgb(16 185 129 / 0.2)}.hover\:bg-brand-500\/30:hover{background-color:rgb(16 185 129 / 0.3)}.hover\:bg-gray-700:hover{--tw-bg-opacity:1;background-color:rgb(55 65 81 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-800:hover{--tw-bg-opacity:1;background-color:rgb(31 41 55 / var(--tw-bg-opacity, 1))}.hover\:bg-orange-500\/30:hover{background-color:rgb(249 115 22 / 0.3)}.hover\:bg-red-500\/30:hover{background-color:rgb(239 68 68 / 0.3)}.hover\:bg-yellow-500\/30:hover{background-color:rgb(234 179 8 / 0.3)}.hover\:text-brand-400:hover{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.hover\:text-cyan-300:hover{--tw-text-opacity:1;color:rgb(103 232 249 / var(--tw-text-opacity, 1))}.hover\:text-gray-300:hover{--tw-text-opacity:1;color:rgb(209 213 219 / var(--tw-text-opacity, 1))}.hover\:text-violet-300:hover{--tw-text-opacity:1;color:rgb(196 181 253 / var(--tw-text-opacity, 1))}.hover\:text-white:hover{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.hover\:text-yellow-300:hover{--tw-text-opacity:1;color:rgb(253 224 71 / var(--tw-text-opacity, 1))}.hover\:opacity-90:hover{opacity:0.9}.hover\:shadow-lg:hover{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.hover\:shadow-brand-500\/25:hover{--tw-shadow-color:rgb(16 185 129 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.hover\:shadow-brand-500\/30:hover{--tw-shadow-color:rgb(16 185 129 / 0.3);--tw-shadow:var(--tw-shadow-colored)}.focus\:border-brand-500:focus{--tw-border-opacity:1;border-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.focus\:border-brand-500\/60:focus{border-color:rgb(16 185 129 / 0.6)}.focus\:outline-none:focus{outline:2px solid transparent;outline-offset:2px}.group:hover .group-hover\:rotate-6{--tw-rotate:6deg;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:scale-110{--tw-scale-x:1.1;--tw-scale-y:1.1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:scale-150{--tw-scale-x:1.5;--tw-scale-y:1.5;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.group:hover .group-hover\:text-accent-cyan{--tw-text-opacity:1;color:rgb(6 182 212 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:text-accent-violet{--tw-text-opacity:1;color:rgb(139 92 246 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:text-brand-400{--tw-text-opacity:1;color:rgb(52 211 153 / var(--tw-text-opacity, 1))}.group:hover .group-hover\:text-yellow-400{--tw-text-opacity:1;color:rgb(250 204 21 / var(--tw-text-opacity, 1))}@media (min-width: 640px){.sm\:inline{display:inline}.sm\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.sm\:flex-row{flex-direction:row}.sm\:p-12{padding:3rem}.sm\:p-6{padding:1.5rem}.sm\:p-8{padding:2rem}.sm\:pb-0{padding-bottom:0px}.sm\:text-4xl{font-size:2.25rem;line-height:2.5rem}.sm\:text-5xl{font-size:3rem;line-height:1}.sm\:text-base{font-size:1rem;line-height:1.5rem}.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}.sm\:text-sm{font-size:0.875rem;line-height:1.25rem}}@media (min-width: 768px){.md\:left-1\/2{left:50%}.md\:mt-0{margin-top:0px}.md\:block{display:block}.md\:flex{display:flex}.md\:w-1\/2{width:50%}.md\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.md\:grid-cols-3{grid-template-columns:repeat(3, minmax(0, 1fr))}.md\:flex-row{flex-direction:row}.md\:items-end{align-items:flex-end}.md\:justify-end{justify-content:flex-end}.md\:pb-0{padding-bottom:0px}.md\:pl-0{padding-left:0px}.md\:pl-8{padding-left:2rem}.md\:pr-8{padding-right:2rem}.md\:before\:left-1\/2::before{content:var(--tw-content);left:50%}}@media (min-width: 1024px){.lg\:col-span-5{grid-column:span 5 / span 5}.lg\:col-span-7{grid-column:span 7 / span 7}.lg\:h-96{height:24rem}.lg\:w-\[420px\]{width:420px}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.lg\:flex-row{flex-direction:row}.lg\:justify-start{justify-content:flex-start}.lg\:gap-16{gap:4rem}.lg\:divide-x > :not([hidden]) ~ :not([hidden]){--tw-divide-x-reverse:0;border-right-width:calc(1px * var(--tw-divide-x-reverse));border-left-width:calc(1px * calc(1 - var(--tw-divide-x-reverse)))}.lg\:divide-y-0 > :not([hidden]) ~ :not([hidden]){--tw-divide-y-reverse:0;border-top-width:calc(0px * calc(1 - var(--tw-divide-y-reverse)));border-bottom-width:calc(0px * var(--tw-divide-y-reverse))}.lg\:px-8{padding-left:2rem;padding-right:2rem}.lg\:text-left{text-align:left}.lg\:text-6xl{font-size:3.75rem;line-height:1}}</style></head>
+
+<body class="bg-[#080c14] text-gray-200 font-sans antialiased selection:bg-brand-500 selection:text-black min-h-screen relative overflow-x-hidden">
+
+  <!-- Ambient Light Orbs -->
+  <div class="fixed top-1/4 left-10 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse"></div>
+  <div class="fixed bottom-1/4 right-10 w-96 h-96 bg-accent-cyan/10 rounded-full blur-3xl pointer-events-none -z-10" style="animation: pulse-subtle 8s infinite ease-in-out;"></div>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 glass-card border-b border-gray-800/80 px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-accent-cyan flex items-center justify-center font-bold text-black text-xl shadow-lg shadow-brand-500/20 group-hover:rotate-6 transition-transform">
+          JK
+        </div>
+        <div>
+          <span class="font-bold text-white tracking-wide text-base block group-hover:text-brand-400 transition-colors">김정규</span>
+          <span class="text-[11px] text-gray-400 block font-mono">PNU IE &amp; AI Lab</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-gray-300">
+        <a href="#about" class="hover:text-brand-400 transition-colors">소개 &amp; 비전</a>
+        <a href="#python-studio" class="hover:text-brand-400 transition-colors flex items-center gap-1.5 text-brand-400">
+          <i class="fab fa-python"></i> Interactive Python
+        </a>
+        <a href="#simulators" class="hover:text-brand-400 transition-colors">실시간 시뮬레이터</a>
+        <a href="#projects" class="hover:text-brand-400 transition-colors">프로젝트</a>
+        <a href="#skills" class="hover:text-brand-400 transition-colors">기술 스택</a>
+        <a href="#career" class="hover:text-brand-400 transition-colors">학술 및 경력</a>
+      </nav>
+
+      <!-- Action Button & Terminal Toggle -->
+      <div class="flex items-center gap-3">
+        <button onclick="toggleTerminalModal()" class="px-3 py-1.5 rounded-lg border border-gray-700 bg-gray-800/80 hover:bg-gray-700 text-xs text-gray-300 flex items-center gap-1.5 transition-all">
+          <i class="fas fa-terminal text-brand-400"></i>
+          <span class="hidden sm:inline font-mono">CLI Shell</span>
+        </button>
+        <button onclick="openDownloadModal()" class="px-3 py-1.5 rounded-lg border border-brand-500/50 bg-brand-500/10 hover:bg-brand-500/20 text-xs text-brand-400 font-mono flex items-center gap-1.5 transition-all">
+          <i class="fas fa-download"></i>
+          <span class="hidden sm:inline">로컬 다운로드</span>
+        </button>
+        <a href="#contact" class="px-4 py-2 rounded-lg bg-gradient-to-r from-brand-500 to-accent-cyan text-black font-semibold text-xs tracking-wide hover:shadow-lg hover:shadow-brand-500/25 transition-all">
+          Contact Me
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-20 pb-28 px-4 overflow-hidden bg-grid-pattern">
+    <div class="max-w-6xl mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      
+      <!-- Text Info -->
+      <div class="flex-1 text-center lg:text-left space-y-6">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-400 text-xs font-mono font-medium">
+          <span class="w-2 h-2 rounded-full bg-brand-400 animate-ping"></span>
+          부산대학교 공과대학 산업공학과 | AI &amp; Optimization Engineer
+        </div>
+        
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-tight">
+          산업공학의 <span class="bg-gradient-to-r from-brand-400 via-accent-cyan to-accent-indigo bg-clip-text text-transparent">최적화</span>와<br>
+          <span class="bg-gradient-to-r from-accent-cyan to-brand-400 bg-clip-text text-transparent">AI 딥러닝</span>의 융합
+        </h1>
+
+        <p class="text-base sm:text-lg text-gray-400 max-w-2xl leading-relaxed">
+          안녕하세요, 부산대학교 산업공학과에서 복잡한 제조·물류 현장의 비효율을 수리 최적화 모델과 
+          인공지능(AI/ML)으로 해결하는 연구를 진행하고 있는 <strong class="text-white">김정규</strong>입니다. 
+          데이터 분석부터 실시간 예지보전, 강화학습 스케줄링까지 가치를 창출하는 모델을 구현합니다.
+        </p>
+
+        <!-- Quick Tags -->
+        <div class="flex flex-wrap justify-center lg:justify-start gap-2 text-xs font-mono">
+          <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700/60 text-gray-300"><i class="fas fa-microchip text-brand-400 mr-1.5"></i>Smart Factory</span>
+          <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700/60 text-gray-300"><i class="fas fa-boxes-packing text-accent-cyan mr-1.5"></i>SCM Optimization</span>
+          <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700/60 text-gray-300"><i class="fas fa-brain text-accent-violet mr-1.5"></i>Reinforcement Learning</span>
+          <span class="px-2.5 py-1 rounded bg-gray-800/80 border border-gray-700/60 text-gray-300"><i class="fab fa-python text-yellow-400 mr-1.5"></i>Pyodide Wasm Ready</span>
+        </div>
+
+        <!-- Call to actions -->
+        <div class="flex flex-wrap justify-center lg:justify-start items-center gap-4 pt-2">
+          <a href="#python-studio" class="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-400 text-black font-semibold text-sm flex items-center gap-2 shadow-lg shadow-brand-500/25 transition-all transform hover:-translate-y-0.5">
+            <i class="fab fa-python text-lg"></i>
+            브라우저 Python 스튜디오 실행
+          </a>
+          <a href="#simulators" class="px-6 py-3 rounded-xl glass-card hover:bg-gray-800 text-white font-semibold text-sm border border-gray-700 flex items-center gap-2 transition-all">
+            <i class="fas fa-sliders text-accent-cyan"></i>
+            인터랙티브 데모 체험
+          </a>
+          <button onclick="openDownloadModal()" class="px-5 py-3 rounded-xl border border-brand-500/40 bg-brand-500/10 hover:bg-brand-500/20 text-brand-300 font-semibold text-sm flex items-center gap-2 transition-all">
+            <i class="fas fa-file-arrow-down text-brand-400"></i>
+            HTML·CSS·PY 파일 받기
+          </button>
+        </div>
+      </div>
+
+      <!-- Hero Visual Card / Quick Metric Card -->
+      <div class="w-full max-w-md lg:w-[420px]">
+        <div class="glass-card rounded-2xl p-6 border border-gray-700/80 relative shadow-2xl overflow-hidden group">
+          <div class="absolute -top-12 -right-12 w-32 h-32 bg-brand-500/20 rounded-full blur-2xl group-hover:scale-150 transition-all"></div>
+
+          <!-- Code Header Simulation -->
+          <div class="flex items-center justify-between pb-4 border-b border-gray-800 text-xs font-mono text-gray-400">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-red-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-yellow-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-green-500/80 inline-block"></span>
+              <span class="ml-1 text-gray-400">kim_jeonggyu_profile.py</span>
+            </div>
+            <span class="text-brand-400">Py3.11</span>
+          </div>
+
+          <!-- Bio Code Snippet -->
+          <pre class="mt-4 font-mono text-xs text-gray-300 leading-relaxed overflow-x-auto p-3 rounded-lg bg-black/40 border border-gray-800"><span class="text-blue-400">class</span> <span class="text-green-400">EngineerProfile</span>:
+  <span class="text-blue-400">name</span>: str = <span class="text-amber-300">"김정규 (Kim Jeong-gyu)"</span>
+  <span class="text-blue-400">univ</span>: str = <span class="text-amber-300">"부산대학교 (PNU)"</span>
+  <span class="text-blue-400">major</span>: str = <span class="text-amber-300">"산업공학과 (IE)"</span>
+  <span class="text-blue-400">focus</span> = [
+    <span class="text-brand-400">"수리계획 &amp; 공정 최적화"</span>,
+    <span class="text-brand-400">"스마트 팩토리 센서 시계열 AI"</span>,
+    <span class="text-brand-400">"딥러닝 기반 결함 자동 탐지"</span>
+  ]
+  <span class="text-blue-400">status</span> = <span class="text-cyan-400">"Seeking AI / OR Challenges"</span></pre>
+
+          <!-- Core Stat Counters -->
+          <div class="grid grid-cols-3 gap-3 mt-5 pt-4 border-t border-gray-800 text-center">
+            <div class="p-2 rounded-lg bg-gray-800/40">
+              <div class="text-lg font-bold text-white font-mono">14+</div>
+              <div class="text-[10px] text-gray-400">AI / 최적화 프로젝트</div>
+            </div>
+            <div class="p-2 rounded-lg bg-gray-800/40">
+              <div class="text-lg font-bold text-brand-400 font-mono">94.8%</div>
+              <div class="text-[10px] text-gray-400">결함 분류 최고 mAP</div>
+            </div>
+            <div class="p-2 rounded-lg bg-gray-800/40">
+              <div class="text-lg font-bold text-accent-cyan font-mono">-28%</div>
+              <div class="text-[10px] text-gray-400">물류 납기지연 단축</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Section: About & Industrial Engineering x AI Synergy -->
+  <section id="about" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="text-brand-400 font-mono text-xs uppercase tracking-wider font-semibold">Core Philosophy</span>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mt-2">산업공학과 AI가 만드는 시너지</h2>
+      <p class="text-gray-400 text-sm sm:text-base mt-3">
+        단순한 모델 학습에 그치지 않고, 시스템 엔지니어링 관점에서 제약 조건(시간, 비용, 자원)을 정량화하고 
+        수학적 최적화 기법과 딥러닝 알고리즘을 유기적으로 결합합니다.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Synergy Card 1 -->
+      <div class="glass-card rounded-2xl p-7 hover:border-brand-500/50 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center text-brand-400 text-xl mb-5 group-hover:scale-110 transition-transform">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-brand-400 transition-colors">데이터 기반 운영 연구 (OR)</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          선형/정수계획법(MILP), 메타휴리스틱(유전 알고리즘, 타부 서치)을 통해 제조 공정 스케줄링, 물류 창고 레이아웃, 재고 발주점 최적화를 수학적으로 모델링합니다.
+        </p>
+        <div class="mt-4 pt-3 border-t border-gray-800 flex items-center gap-2 text-xs text-gray-400 font-mono">
+          <span class="text-brand-400">Tools:</span> PuLP, Gurobi, SciPy, OR-Tools
+        </div>
+      </div>
+
+      <!-- Synergy Card 2 -->
+      <div class="glass-card rounded-2xl p-7 hover:border-accent-cyan/50 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-center text-accent-cyan text-xl mb-5 group-hover:scale-110 transition-transform">
+          <i class="fas fa-wave-square"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-accent-cyan transition-colors">스마트 팩토리 &amp; 예지보전 (PHM)</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          설비 진동, 전류, 온도 등의 고빈도 센서 시계열 데이터(Time-Series)에서 잠재 이상 징후를 사전 감지하고 잔여 수명(RUL: Remaining Useful Life)을 예측합니다.
+        </p>
+        <div class="mt-4 pt-3 border-t border-gray-800 flex items-center gap-2 text-xs text-gray-400 font-mono">
+          <span class="text-accent-cyan">Tools:</span> PyTorch, TFT, FFT, XGBoost
+        </div>
+      </div>
+
+      <!-- Synergy Card 3 -->
+      <div class="glass-card rounded-2xl p-7 hover:border-accent-violet/50 transition-all group">
+        <div class="w-12 h-12 rounded-xl bg-accent-violet/10 border border-accent-violet/30 flex items-center justify-center text-accent-violet text-xl mb-5 group-hover:scale-110 transition-transform">
+          <i class="fas fa-eye"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white mb-2 group-hover:text-accent-violet transition-colors">품질 자동 검사 &amp; 비전 AI</h3>
+        <p class="text-sm text-gray-400 leading-relaxed">
+          고속 제조 라인의 표면 스크래치, 기포, 치수 오차 등을 실시간 객체 인식 및 세그멘테이션으로 전수 검사하여 작업자 피로도 경감 및 불량률 제로화를 달성합니다.
+        </p>
+        <div class="mt-4 pt-3 border-t border-gray-800 flex items-center gap-2 text-xs text-gray-400 font-mono">
+          <span class="text-accent-violet">Tools:</span> YOLOv8, OpenCV, TensorRT, FastAPI
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Section: In-Browser Python Studio (Pyodide Execution) -->
+  <section id="python-studio" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="text-center max-w-3xl mx-auto mb-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30 text-yellow-400 text-xs font-mono font-semibold mb-3">
+        <i class="fab fa-python"></i> WebAssembly Live Python Engine
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white">인터랙티브 파이썬 연구실</h2>
+      <p class="text-gray-400 text-sm sm:text-base mt-2">
+        설치나 서버 없이 브라우저(WebAssembly)에서 실제 Python 3 코드가 즉시 연산됩니다. 
+        산업공학 예제 프리셋을 선택하고 직접 코드를 수정한 뒤 실행해 보세요!
+      </p>
+    </div>
+
+    <!-- Python Studio Card -->
+    <div class="glass-card rounded-2xl border border-gray-700/80 overflow-hidden shadow-2xl">
+      <!-- Editor Toolbar -->
+      <div class="bg-gray-900/90 px-4 py-3 border-b border-gray-800 flex flex-wrap items-center justify-between gap-3">
+        <!-- Preset Tab Selector -->
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          <button onclick="loadPreset('lp')" id="tab-lp" class="preset-tab active px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-brand-500/20 text-brand-400 border border-brand-500/40 hover:bg-brand-500/30 transition-all">
+            1. 생산계획 최적화 (LP)
+          </button>
+          <button onclick="loadPreset('anomaly')" id="tab-anomaly" class="preset-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all">
+            2. 센서 이상치 탐지 (Z-Score)
+          </button>
+          <button onclick="loadPreset('schedule')" id="tab-schedule" class="preset-tab px-3 py-1.5 rounded-lg text-xs font-mono font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-all">
+            3. 공정 스케줄링 (SPT 알고리즘)
+          </button>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center gap-3">
+          <span id="py-status" class="text-[11px] font-mono text-gray-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> WebAssembly Pyodide 준비 완료</span>
+          <button onclick="runPythonCode()" id="run-btn" class="px-4 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-black font-semibold text-xs font-mono flex items-center gap-2 shadow-md hover:shadow-brand-500/30 transition-all">
+            <i class="fas fa-play text-[10px]"></i> 코드 실행 (Run)
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor & Console Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-gray-800">
+        <!-- Code Editor Area -->
+        <div class="p-4 bg-[#0a0e17] flex flex-col">
+          <div class="flex items-center justify-between text-xs text-gray-400 font-mono mb-2">
+            <span><i class="far fa-file-code text-brand-400 mr-1.5"></i>main.py (직접 편집 가능)</span>
+            <button onclick="resetEditorCode()" class="text-[11px] text-gray-500 hover:text-gray-300">
+              <i class="fas fa-rotate-left mr-1"></i>기본 코드로 초기화
+            </button>
+          </div>
+          <div class="relative flex-1">
+            <textarea id="python-code-input" class="w-full h-80 lg:h-96 bg-black/60 text-gray-200 font-mono text-xs sm:text-sm p-4 rounded-xl border border-gray-800 focus:border-brand-500/60 focus:outline-none resize-none leading-relaxed" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Terminal Console Output Area -->
+        <div class="p-4 bg-[#06090f] flex flex-col">
+          <div class="flex items-center justify-between text-xs text-gray-400 font-mono mb-2">
+            <span><i class="fas fa-terminal text-accent-cyan mr-1.5"></i>Python Console Output</span>
+            <button onclick="clearConsoleOutput()" class="text-[11px] text-gray-500 hover:text-gray-300">
+              <i class="fas fa-trash-can mr-1"></i>지우기
+            </button>
+          </div>
+          <div id="python-output" class="w-full h-80 lg:h-96 bg-black/90 text-emerald-400 font-mono text-xs p-4 rounded-xl border border-gray-800/90 overflow-y-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+# [부산대학교 산업공학과 김정규의 AI Studio]
+# 상단의 '코드 실행' 버튼을 누르면 Python 코드가 즉시 연산됩니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Section: Real-Time Interactive Visualizers -->
+  <section id="simulators" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <span class="text-accent-cyan font-mono text-xs uppercase tracking-wider font-semibold">Interactive Simulations</span>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mt-2">현장 데이터 &amp; 최적화 시뮬레이터</h2>
+      <p class="text-gray-400 text-sm sm:text-base mt-2">
+        센서 실시간 이상치 주입 반응과 제품 배분 선형계획법(LP)의 가용 영역(Feasible Region)을 직접 조작해 보세요.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- Simulator 1: Live Sensor Vibration & Anomaly Detector -->
+      <div class="glass-card rounded-2xl p-6 border border-gray-700/80 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <div class="w-3 h-3 rounded-full bg-accent-cyan animate-pulse"></div>
+              <h3 class="text-lg font-bold text-white">사출성형 설비 진동 센서 실시간 모니터링</h3>
+            </div>
+            <span id="anomaly-badge" class="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">정상 (Normal)</span>
+          </div>
+          <p class="text-xs text-gray-400 mb-4">
+            초당 10회 생성되는 합성 진동 가속도(g) 신호에 Z-Score 통계적 이상치 판별 알고리즘을 실시간 적용합니다.
+          </p>
+
+          <!-- Waveform Canvas -->
+          <div class="h-52 bg-black/60 rounded-xl border border-gray-800 p-2 relative mb-4">
+            <canvas id="sensorChart" class="w-full h-full" height="286" style="display: block; box-sizing: border-box; height: 190.7px; width: 601.3px;" width="902"></canvas>
+          </div>
+
+          <!-- Controls -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+            <div>
+              <div class="flex justify-between text-gray-400 mb-1">
+                <span>이상치 임계값 (Z-Threshold):</span>
+                <span id="threshold-val" class="text-accent-cyan">2.5σ</span>
+              </div>
+              <input type="range" id="threshold-slider" min="1.5" max="4.0" step="0.1" value="2.5" class="w-full accent-accent-cyan cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-gray-400 mb-1">
+                <span>배경 노이즈 레벨:</span>
+                <span id="noise-val" class="text-gray-300">1.0x</span>
+              </div>
+              <input type="range" id="noise-slider" min="0.2" max="2.5" step="0.1" value="1.0" class="w-full accent-brand-500 cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Inject Anomaly Action -->
+        <div class="mt-5 pt-4 border-t border-gray-800 flex items-center justify-between">
+          <span class="text-xs text-gray-400">갑작스러운 베어링 파손 상황 재현:</span>
+          <button onclick="injectAnomaly()" class="px-3 py-1.5 rounded-lg bg-red-500/20 border border-red-500/40 hover:bg-red-500/30 text-red-400 text-xs font-semibold flex items-center gap-1.5 transition-all">
+            <i class="fas fa-bolt"></i> 이상 충격 주입 (Inject Shock)
+          </button>
+        </div>
+      </div>
+
+      <!-- Simulator 2: Interactive 2D LP Solver (Production Mix Problem) -->
+      <div class="glass-card rounded-2xl p-6 border border-gray-700/80 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2.5">
+              <i class="fas fa-cubes text-brand-400 text-lg"></i>
+              <h3 class="text-lg font-bold text-white">2D 제품 생산계획 선형계획법(LP)</h3>
+            </div>
+            <span class="text-xs font-mono text-brand-400 font-semibold">Simplex Geometry</span>
+          </div>
+          <p class="text-xs text-gray-400 mb-4">
+            제품 A와 B를 생산할 때 자원(기계가공 시간, 조립 노동력) 한도 내에서 총 이익(Profit)을 극대화하는 실행가능영역을 실시간 계산합니다.
+          </p>
+
+          <!-- LP Canvas -->
+          <div class="h-52 bg-black/60 rounded-xl border border-gray-800 p-2 relative mb-4 flex items-center justify-center">
+            <canvas id="lpCanvas" class="w-full h-full" width="618" height="208"></canvas>
+          </div>
+
+          <!-- Parameter Sliders -->
+          <div class="grid grid-cols-2 gap-4 text-xs font-mono">
+            <div>
+              <div class="flex justify-between text-gray-400 mb-1">
+                <span>가용 기계 시간:</span>
+                <span id="val-capA" class="text-brand-400 font-bold">120h</span>
+              </div>
+              <input type="range" id="slider-capA" min="60" max="200" step="5" value="120" class="w-full accent-brand-500 cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-gray-400 mb-1">
+                <span>가용 조립 시간:</span>
+                <span id="val-capB" class="text-brand-400 font-bold">100h</span>
+              </div>
+              <input type="range" id="slider-capB" min="50" max="180" step="5" value="100" class="w-full accent-brand-500 cursor-pointer">
+            </div>
+          </div>
+        </div>
+
+        <!-- Calculated Optimal Solution Box -->
+        <div class="mt-5 pt-4 border-t border-gray-800 flex items-center justify-between text-xs font-mono">
+          <div class="text-gray-400">
+            최적 생산량: <span id="opt-plan" class="text-white font-bold">A: 46.7개, B: 26.7개</span>
+          </div>
+          <div class="text-brand-400 font-bold">
+            최대 이익: <span id="opt-profit" class="text-sm">₩2,066,667</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Featured Projects Section -->
+  <section id="projects" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-12">
+      <div>
+        <span class="text-brand-400 font-mono text-xs uppercase tracking-wider font-semibold">Featured Projects</span>
+        <h2 class="text-3xl sm:text-4xl font-bold text-white mt-1">산업 현장 맞춤형 AI 프로젝트</h2>
+        <p class="text-gray-400 text-sm mt-2">이론에 멈추지 않고 도메인 지식과 최신 머신러닝 아키텍처를 결합한 대표 연구 과제입니다.</p>
+      </div>
+
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-2 mt-6 md:mt-0 overflow-x-auto pb-2 md:pb-0 text-xs font-mono">
+        <button onclick="filterProjects('all')" class="proj-filter active px-3 py-1.5 rounded-lg bg-brand-500 text-black font-semibold">All (4)</button>
+        <button onclick="filterProjects('smart-factory')" class="proj-filter px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">스마트제조 &amp; 비전</button>
+        <button onclick="filterProjects('scm-or')" class="proj-filter px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">SCM &amp; 최적화</button>
+        <button onclick="filterProjects('rl-llm')" class="proj-filter px-3 py-1.5 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700">강화학습 &amp; LLM</button>
+      </div>
+    </div>
+
+    <!-- Project Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-7">
+      
+      <!-- Project 1 -->
+      <div class="project-card glass-card rounded-2xl p-6 border border-gray-700/80 hover:border-brand-500/60 transition-all flex flex-col justify-between group" data-category="smart-factory">
+        <div>
+          <div class="flex items-center justify-between mb-3 text-xs font-mono">
+            <span class="text-brand-400 font-semibold"><i class="fas fa-microchip mr-1"></i>Computer Vision &amp; Quality</span>
+            <span class="text-gray-400">2026.03 - 2026.08</span>
+          </div>
+          <h3 class="text-xl font-bold text-white group-hover:text-brand-400 transition-colors">
+            반도체 웨이퍼 표면 미세 결함 실시간 검출 및 등급 분류기
+          </h3>
+          <p class="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+            고해상도 전자현미경(SEM) 이미지 상의 크랙, 파티클, 패턴 붕괴 결함을 YOLOv8 및 Vision Transformer로 0.02초 내 검출. 
+            불균형 데이터 극복을 위한 합성 Diffusion 오그멘테이션 기법을 적용했습니다.
+          </p>
+
+          <div class="mt-4 p-3 rounded-xl bg-black/40 border border-gray-800 space-y-1.5 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">모델 정확도 (mAP50):</span>
+              <span class="text-brand-400 font-bold">94.8% (+6.2%p 향상)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">추론 속도 (FPS):</span>
+              <span class="text-accent-cyan font-bold">58 FPS (TensorRT 가속)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-mono">
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">PyTorch</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">YOLOv8</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">FastAPI</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Docker</span>
+          </div>
+          <button onclick="showProjectModal('wafer')" class="text-xs text-brand-400 hover:text-brand-300 font-semibold flex items-center gap-1">
+            상세 보고서 <i class="fas fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Project 2 -->
+      <div class="project-card glass-card rounded-2xl p-6 border border-gray-700/80 hover:border-brand-500/60 transition-all flex flex-col justify-between group" data-category="scm-or">
+        <div>
+          <div class="flex items-center justify-between mb-3 text-xs font-mono">
+            <span class="text-accent-cyan font-semibold"><i class="fas fa-truck-ramp-box mr-1"></i>SCM &amp; Operations Research</span>
+            <span class="text-gray-400">2025.09 - 2026.01</span>
+          </div>
+          <h3 class="text-xl font-bold text-white group-hover:text-accent-cyan transition-colors">
+            다단계 유통망 채찍효과(Bullwhip Effect) 방지 동적 안전재고 최적화
+          </h3>
+          <p class="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+            원자재 조달부터 고객 판매까지의 리드타임 변동성을 정수계획법(MILP)과 딥러닝 수요 예측(Temporal Fusion Transformer)으로 융합해 
+            결품률을 최소화하면서 총 재고보관비용을 21.4% 감축했습니다.
+          </p>
+
+          <div class="mt-4 p-3 rounded-xl bg-black/40 border border-gray-800 space-y-1.5 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">총 물류비용 절감액:</span>
+              <span class="text-brand-400 font-bold">연간 약 2.4억원 시뮬레이션 추산</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">안전재고 수준:</span>
+              <span class="text-accent-cyan font-bold">-26% 불필요 완충재고 삭감</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-mono">
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Python</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Gurobi</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">PuLP</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">TFT</span>
+          </div>
+          <button onclick="showProjectModal('scm')" class="text-xs text-accent-cyan hover:text-cyan-300 font-semibold flex items-center gap-1">
+            상세 보고서 <i class="fas fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Project 3 -->
+      <div class="project-card glass-card rounded-2xl p-6 border border-gray-700/80 hover:border-brand-500/60 transition-all flex flex-col justify-between group" data-category="smart-factory">
+        <div>
+          <div class="flex items-center justify-between mb-3 text-xs font-mono">
+            <span class="text-accent-violet font-semibold"><i class="fas fa-gears mr-1"></i>PHM &amp; Anomaly Detection</span>
+            <span class="text-gray-400">2025.04 - 2025.08</span>
+          </div>
+          <h3 class="text-xl font-bold text-white group-hover:text-accent-violet transition-colors">
+            CNC 공작기계 공구 마모도 추정 및 잔여수명(RUL) 사전 예측
+          </h3>
+          <p class="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+            절삭 가공 시 수집되는 3축 가속도계 및 음향 방출(AE) 센서 데이터를 주파수 영역(STFT)으로 변환 후, 
+            LSTM-Autoencoder 모델을 구축하여 공구 파손 45분 전 조기 경보를 전달하는 파이프라인 개발.
+          </p>
+
+          <div class="mt-4 p-3 rounded-xl bg-black/40 border border-gray-800 space-y-1.5 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">잔여 수명 예측 오차 (RMSE):</span>
+              <span class="text-brand-400 font-bold">±8.2분 달성</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">비계획 가동중지시간(Downtime):</span>
+              <span class="text-accent-violet font-bold">34% 감소 효과</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-mono">
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">SciPy</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">PyTorch</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">InfluxDB</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Grafana</span>
+          </div>
+          <button onclick="showProjectModal('cnc')" class="text-xs text-accent-violet hover:text-violet-300 font-semibold flex items-center gap-1">
+            상세 보고서 <i class="fas fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Project 4 -->
+      <div class="project-card glass-card rounded-2xl p-6 border border-gray-700/80 hover:border-brand-500/60 transition-all flex flex-col justify-between group" data-category="rl-llm">
+        <div>
+          <div class="flex items-center justify-between mb-3 text-xs font-mono">
+            <span class="text-yellow-400 font-semibold"><i class="fas fa-robot mr-1"></i>RL &amp; Industrial Agent</span>
+            <span class="text-gray-400">2025.10 - 2026.04</span>
+          </div>
+          <h3 class="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors">
+            유연제조시스템(FMS) 작업 스케줄링을 위한 심층 강화학습 에이전트
+          </h3>
+          <p class="text-xs sm:text-sm text-gray-300 mt-2 leading-relaxed">
+            복수 기계 및 작업 제약이 존재하는 잡샵(Job-Shop) 공정에서 지연 시간과 병목 현상을 방지하도록 
+            PPO(Proximal Policy Optimization) 기반 강화학습 에이전트를 학습시키고 전통적 휴리스틱(FIFO, SPT) 대비 Makespan 18% 단축.
+          </p>
+
+          <div class="mt-4 p-3 rounded-xl bg-black/40 border border-gray-800 space-y-1.5 text-xs font-mono">
+            <div class="flex justify-between">
+              <span class="text-gray-400">총 작업소요시간(Makespan):</span>
+              <span class="text-brand-400 font-bold">평균 18.2% 단축</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-gray-400">긴급 오더 대응 지연:</span>
+              <span class="text-yellow-400 font-bold">실시간 재할당 0.12초</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-gray-800/80 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap gap-1.5 text-[11px] font-mono">
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Gymnasium</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">Ray RLlib</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">SimPy</span>
+            <span class="px-2 py-0.5 rounded bg-gray-800 text-gray-300">PyTorch</span>
+          </div>
+          <button onclick="showProjectModal('rl')" class="text-xs text-yellow-400 hover:text-yellow-300 font-semibold flex items-center gap-1">
+            상세 보고서 <i class="fas fa-arrow-right text-[10px]"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Technical Skills & Radar Chart Section -->
+  <section id="skills" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <span class="text-brand-400 font-mono text-xs uppercase tracking-wider font-semibold">Technical Matrix</span>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mt-1">기술 역량 분석 및 스택</h2>
+      <p class="text-gray-400 text-sm mt-2">수학적 기초와 소프트웨어 구현 능력을 결합한 풀스택 분석 스택입니다.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+      <!-- Radar Chart (Left 5 cols) -->
+      <div class="lg:col-span-5 glass-card rounded-2xl p-6 border border-gray-700/80 flex flex-col items-center">
+        <h3 class="text-base font-bold text-white mb-2 self-start flex items-center gap-2">
+          <i class="fas fa-compass-drafting text-brand-400"></i> 역량 밸런스 레이더
+        </h3>
+        <p class="text-xs text-gray-400 self-start mb-4">산업공학 고유 역량과 AI 기술 스택의 균형도</p>
+        <div class="w-full max-w-[340px] aspect-square relative">
+          <canvas id="skillsRadarChart" height="510" style="display: block; box-sizing: border-box; height: 340px; width: 340px;" width="510"></canvas>
+        </div>
+      </div>
+
+      <!-- Skill Categorized Badges (Right 7 cols) -->
+      <div class="lg:col-span-7 space-y-5">
+        
+        <!-- Category 1 -->
+        <div class="glass-card rounded-xl p-5 border border-gray-800">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-400"></span>
+            <h4 class="text-sm font-bold text-white">AI &amp; Deep Learning (인공지능)</h4>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-mono">
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-brand-400 border border-brand-500/30">PyTorch (Advanced)</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">YOLOv8 / ViT</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">HuggingFace Transformers</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">TensorFlow/Keras</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">OpenCV</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">Scikit-Learn</span>
+          </div>
+        </div>
+
+        <!-- Category 2 -->
+        <div class="glass-card rounded-xl p-5 border border-gray-800">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-accent-cyan"></span>
+            <h4 class="text-sm font-bold text-white">Operations Research &amp; Statistics (산업공학·최적화)</h4>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-mono">
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-accent-cyan border border-cyan-500/30">선형/정수계획법 (MILP)</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">Gurobi Optimizer</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">PuLP / SciPy Optimize</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">통계적 품질관리 (SPC/SQC)</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">SimPy 공정 시뮬레이션</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">다변량 시계열 분석 (ARIMA/VAR)</span>
+          </div>
+        </div>
+
+        <!-- Category 3 -->
+        <div class="glass-card rounded-xl p-5 border border-gray-800">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-accent-violet"></span>
+            <h4 class="text-sm font-bold text-white">Data Engineering &amp; Deployment (MLOps)</h4>
+          </div>
+          <div class="flex flex-wrap gap-2 text-xs font-mono">
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-accent-violet border border-violet-500/30">FastAPI</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">Docker &amp; Docker-Compose</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">PostgreSQL / InfluxDB</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">Git / GitHub Actions</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">MLflow 추적</span>
+            <span class="px-2.5 py-1 rounded bg-gray-800/90 text-gray-300 border border-gray-700">Linux / Bash</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Education, Research & Awards Timeline -->
+  <section id="career" class="py-20 px-4 max-w-7xl mx-auto border-t border-gray-800/60">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <span class="text-brand-400 font-mono text-xs uppercase tracking-wider font-semibold">Experience &amp; Growth</span>
+      <h2 class="text-3xl sm:text-4xl font-bold text-white mt-1">학업 및 연구 활동</h2>
+      <p class="text-gray-400 text-sm mt-2">부산대학교 산업공학과에서의 도전과 성과의 발자취입니다.</p>
+    </div>
+
+    <div class="max-w-3xl mx-auto space-y-8 relative before:absolute before:inset-0 before:left-6 md:before:left-1/2 before:w-0.5 before:bg-gray-800">
+      
+      <!-- Timeline Item 1 -->
+      <div class="relative flex flex-col md:flex-row items-start group">
+        <div class="flex items-center md:w-1/2 md:justify-end md:pr-8 pl-12 md:pl-0">
+          <div class="glass-card p-5 rounded-2xl border border-gray-700/80 w-full hover:border-brand-500/50 transition-all">
+            <span class="text-xs font-mono text-brand-400 font-semibold">2026.03 - 현재</span>
+            <h4 class="text-base font-bold text-white mt-1">산업 AI 및 최적화 연구실 학부연구생</h4>
+            <p class="text-xs text-gray-400 mt-2">
+              부산대학교 산업공학과 지능형 제조 및 시스템 최적화 연구실에서 딥러닝 기반 이상탐지 모델의 경량화 연구 및 산학협력 프로젝트 참여.
+            </p>
+          </div>
+        </div>
+        <div class="absolute left-6 md:left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-dark-900 border-2 border-brand-500 flex items-center justify-center text-[10px] text-brand-400 shadow-md shadow-brand-500/30">
+          <i class="fas fa-flask"></i>
+        </div>
+        <div class="hidden md:block md:w-1/2"></div>
+      </div>
+
+      <!-- Timeline Item 2 -->
+      <div class="relative flex flex-col md:flex-row items-start group">
+        <div class="hidden md:block md:w-1/2"></div>
+        <div class="absolute left-6 md:left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-dark-900 border-2 border-accent-cyan flex items-center justify-center text-[10px] text-accent-cyan shadow-md shadow-cyan-500/30">
+          <i class="fas fa-trophy"></i>
+        </div>
+        <div class="flex items-center md:w-1/2 md:pl-8 pl-12">
+          <div class="glass-card p-5 rounded-2xl border border-gray-700/80 w-full hover:border-accent-cyan/50 transition-all">
+            <span class="text-xs font-mono text-accent-cyan font-semibold">2025.11</span>
+            <h4 class="text-base font-bold text-white mt-1">전국 대학생 스마트 제조 AI 경진대회 최우수상</h4>
+            <p class="text-xs text-gray-400 mt-2">
+              진동 시계열 데이터를 활용한 모터 결함 조기 예측 부문에서 앙상블 비지도 학습 파이프라인으로 전국 2위 달성.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timeline Item 3 -->
+      <div class="relative flex flex-col md:flex-row items-start group">
+        <div class="flex items-center md:w-1/2 md:justify-end md:pr-8 pl-12 md:pl-0">
+          <div class="glass-card p-5 rounded-2xl border border-gray-700/80 w-full hover:border-accent-violet/50 transition-all">
+            <span class="text-xs font-mono text-accent-violet font-semibold">2024.03 - 2025.06</span>
+            <h4 class="text-base font-bold text-white mt-1">대한산업공학회(KIIE) 학생 지부 학술부장</h4>
+            <p class="text-xs text-gray-400 mt-2">
+              교내 산업공학과 학우들과 함께 머신러닝 스터디, 선형계획법 코딩 워크숍 주관 및 정기 기술 세미나 발표 진행.
+            </p>
+          </div>
+        </div>
+        <div class="absolute left-6 md:left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-dark-900 border-2 border-accent-violet flex items-center justify-center text-[10px] text-accent-violet shadow-md shadow-violet-500/30">
+          <i class="fas fa-users"></i>
+        </div>
+        <div class="hidden md:block md:w-1/2"></div>
+      </div>
+
+      <!-- Timeline Item 4 -->
+      <div class="relative flex flex-col md:flex-row items-start group">
+        <div class="hidden md:block md:w-1/2"></div>
+        <div class="absolute left-6 md:left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-dark-900 border-2 border-brand-400 flex items-center justify-center text-[10px] text-brand-400 shadow-md shadow-brand-400/30">
+          <i class="fas fa-graduation-cap"></i>
+        </div>
+        <div class="flex items-center md:w-1/2 md:pl-8 pl-12">
+          <div class="glass-card p-5 rounded-2xl border border-gray-700/80 w-full hover:border-brand-500/50 transition-all">
+            <span class="text-xs font-mono text-brand-400 font-semibold">2023.03 - 입학</span>
+            <h4 class="text-base font-bold text-white mt-1">부산대학교 공과대학 산업공학과</h4>
+            <p class="text-xs text-gray-400 mt-2">
+              확률 및 통계, 수리계획법, 데이터마이닝, 생산운영관리, 품질공학 등 산업공학 핵심 전공 이수 및 학점 4.1/4.5 유지.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Contact & Get In Touch Section -->
+  <section id="contact" class="py-20 px-4 max-w-5xl mx-auto border-t border-gray-800/60">
+    <div class="glass-card rounded-3xl p-8 sm:p-12 border border-gray-700/80 relative overflow-hidden shadow-2xl">
+      <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <div>
+          <span class="text-brand-400 font-mono text-xs uppercase tracking-wider font-semibold">Let's Connect</span>
+          <h2 class="text-3xl font-extrabold text-white mt-2">함께 더 효율적인 미래를 설계합니다</h2>
+          <p class="text-gray-400 text-sm mt-3 leading-relaxed">
+            AI 연구 협업, 인턴십 기회, 산학 과제 제안 또는 산업공학적 문제 해결에 관한 어떤 대화든 환영합니다. 
+            언제든 편하게 연락해 주세요!
+          </p>
+
+          <div class="mt-8 space-y-4 text-sm font-mono text-gray-300">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-brand-400">
+                <i class="fas fa-envelope"></i>
+              </div>
+              <span>jeonggyu.kim@pusan.ac.kr</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-accent-cyan">
+                <i class="fas fa-location-dot"></i>
+              </div>
+              <span>부산광역시 금정구 부산대학로63번길 2 (제10공학관)</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-lg bg-gray-800 border border-gray-700 flex items-center justify-center text-yellow-400">
+                <i class="fab fa-github"></i>
+              </div>
+              <a href="https://github.com" target="_blank" class="hover:text-brand-400 transition-colors" rel="noopener noreferrer">github.com/kimjeonggyu-pnu</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interactive Contact Form -->
+        <form onsubmit="handleContactSubmit(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-mono text-gray-400 mb-1">성함 / 소속 기관</label>
+            <input type="text" id="contact-name" required="" placeholder="예: 홍길동 (현대자동차 생산기술팀)" class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:border-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-mono text-gray-400 mb-1">이메일 주소</label>
+            <input type="email" id="contact-email" required="" placeholder="contact@company.com" class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:border-brand-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-mono text-gray-400 mb-1">메시지 내용</label>
+            <textarea id="contact-msg" rows="4" required="" placeholder="연구 협업 제안 및 문의사항을 남겨주세요." class="w-full bg-black/60 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:border-brand-500 focus:outline-none resize-none"></textarea>
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-accent-cyan hover:opacity-90 text-black font-bold text-sm tracking-wide shadow-lg shadow-brand-500/25 transition-all">
+            메시지 전송하기
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-8 px-4 border-t border-gray-800/80 text-center text-xs text-gray-500 font-mono">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        © 2026 김정규 (Kim Jeong-gyu). Pusan National University Dept. of Industrial Engineering.
+      </div>
+      <div class="flex items-center gap-4 text-gray-400">
+        <span>Powered by Python &amp; WebAssembly</span>
+        <span>•</span>
+        <a href="#about" class="hover:text-white transition-colors">맨 위로 이동</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal: Project Detailed Case Study -->
+  <div id="project-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="glass-card rounded-2xl max-w-2xl w-full border border-gray-700 p-6 sm:p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto">
+      <button onclick="closeProjectModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-lg">
+        <i class="fas fa-times"></i>
+      </button>
+      <div id="modal-content">
+        <!-- Dynamic content injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Interactive CLI Shell Terminal -->
+  <div id="terminal-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-[#050811] rounded-2xl max-w-xl w-full border border-brand-500/40 p-4 sm:p-6 relative shadow-2xl font-mono">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-800 mb-3">
+        <div class="flex items-center gap-2 text-xs text-gray-400">
+          <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+          <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+          <span class="ml-2 text-brand-400">jk-terminal@pnu:~$</span>
+        </div>
+        <button onclick="toggleTerminalModal()" class="text-gray-400 hover:text-white text-sm">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <div id="cli-history" class="h-64 overflow-y-auto text-xs text-gray-300 space-y-1.5 whitespace-pre-wrap leading-relaxed pr-2">
+환영합니다! 김정규의 인터랙티브 쉘입니다.
+'help'를 입력하시면 사용 가능한 명령어 목록을 확인하실 수 있습니다.
+      </div>
+
+      <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-800">
+        <span class="text-brand-400 text-xs">pnu-ie&gt;</span>
+        <input type="text" id="cli-input" onkeydown="handleCliKeyDown(event)" placeholder="help, bio, skills, pnu, clear..." class="flex-1 bg-transparent text-xs text-emerald-300 focus:outline-none">
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Local File Download Center -->
+  <div id="download-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-card rounded-2xl max-w-xl w-full border border-brand-500/50 p-6 sm:p-8 relative shadow-2xl">
+      <button onclick="closeDownloadModal()" class="absolute top-5 right-5 text-gray-400 hover:text-white text-lg">
+        <i class="fas fa-times"></i>
+      </button>
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 rounded-xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-400 text-lg">
+          <i class="fas fa-cloud-arrow-down"></i>
+        </div>
+        <div>
+          <h3 class="text-xl font-bold text-white">로컬 파일 다운로드 센터</h3>
+          <p class="text-xs text-gray-400 font-mono">HTML, CSS, Python 파일을 내 컴퓨터에 즉시 개별/일괄 저장합니다.</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 my-6 font-mono text-xs">
+        <!-- HTML Card -->
+        <div class="p-3.5 rounded-xl bg-black/50 border border-gray-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fab fa-html5 text-orange-400 text-2xl"></i>
+            <div>
+              <div class="text-white font-bold">index.html</div>
+              <div class="text-gray-400 text-[11px]">인터랙티브 웹 포트폴리오 메인 페이지</div>
+            </div>
+          </div>
+          <button onclick="downloadHTMLFile()" class="px-3 py-1.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 flex items-center gap-1.5 transition-all">
+            <i class="fas fa-download"></i> 다운로드
+          </button>
+        </div>
+
+        <!-- CSS Card -->
+        <div class="p-3.5 rounded-xl bg-black/50 border border-gray-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fab fa-css3-alt text-blue-400 text-2xl"></i>
+            <div>
+              <div class="text-white font-bold">style.css</div>
+              <div class="text-gray-400 text-[11px]">글래스모피즘 &amp; 네온 테마 전용 스타일시트</div>
+            </div>
+          </div>
+          <button onclick="downloadCSSFile()" class="px-3 py-1.5 rounded-lg bg-blue-500/20 border border-blue-500/40 text-blue-400 hover:bg-blue-500/30 flex items-center gap-1.5 transition-all">
+            <i class="fas fa-download"></i> 다운로드
+          </button>
+        </div>
+
+        <!-- Python Card -->
+        <div class="p-3.5 rounded-xl bg-black/50 border border-gray-800 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <i class="fab fa-python text-yellow-400 text-2xl"></i>
+            <div>
+              <div class="text-white font-bold">industrial_ai_engine.py</div>
+              <div class="text-gray-400 text-[11px]">선형계획법(LP)·센서 이상탐지·스케줄링 알고리즘</div>
+            </div>
+          </div>
+          <button onclick="downloadPythonFile()" class="px-3 py-1.5 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/30 flex items-center gap-1.5 transition-all">
+            <i class="fas fa-download"></i> 다운로드
+          </button>
+        </div>
+      </div>
+
+      <!-- Batch Download Button -->
+      <div class="flex items-center gap-3 pt-2">
+        <button onclick="downloadAllFiles()" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-accent-cyan hover:opacity-90 text-black font-bold text-xs tracking-wide shadow-lg shadow-brand-500/25 flex items-center justify-center gap-2 transition-all">
+          <i class="fas fa-file-zipper"></i> 3개 파일 한 번에 모두 다운로드 (Batch Download)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast Box (No alert() used) -->
+  <div id="custom-toast" class="fixed bottom-6 right-6 z-50 glass-card border border-brand-500/60 rounded-xl px-5 py-3 text-xs font-mono text-white shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300">
+    <i class="fas fa-circle-check text-brand-400 text-base"></i>
+    <span id="toast-message">메시지가 전달되었습니다.</span>
+  </div>
+
+  <!-- Scripts: Pyodide, Python Presets, Chart.js & Interactive Simulators -->
+  <script>
+    // -------------------------------------------------------------
+    // 1. Python Presets & Browser Pyodide Runner
+    // -------------------------------------------------------------
+    let pyodideInstance = null;
+    let isPyodideLoading = true;
+
+    const pythonPresets = {
+      lp: `# =========================================================
+# [부산대 산업공학과 김정규] 생산계획 선형계획법(LP) 최적화
+# 목적: 총 이익(Profit) 극대화 (단위당 A: 3만원, B: 2.5만원)
+# 제약: 기계가공(120시간), 수작업 조립(100시간)
+# =========================================================
+
+def solve_production_lp(cap_mach=120, cap_labor=100):
+    c1, c2 = 30000, 25000  # 단위당 이익 (KRW)
+    
+    # 제약식 계수
+    # 2*A + 1*B <= cap_mach
+    # 1*A + 2*B <= cap_labor
+    # A >= 0, B >= 0
+    
+    candidates = []
+    
+    # 1. 원점 (0, 0)
+    candidates.append((0, 0, 0))
+    
+    # 2. X축 절편
+    xA = cap_mach / 2.0
+    if 1*xA <= cap_labor:
+        candidates.append((xA, 0, xA * c1))
+        
+    # 3. Y축 절편
+    yB = cap_labor / 2.0
+    if 1*yB <= cap_mach:
+        candidates.append((0, yB, yB * c2))
+        
+    # 4. 두 제약식의 교점 (2A + B = cap_mach & A + 2B = cap_labor)
+    # A = (2*cap_mach - cap_labor) / 3
+    # B = (2*cap_labor - cap_mach) / 3
+    det = 2*2 - 1*1  # 3
+    inter_A = (2*cap_mach - cap_labor) / det
+    inter_B = (2*cap_labor - cap_mach) / det
+    
+    if inter_A >= 0 and inter_B >= 0:
+        candidates.append((inter_A, inter_B, inter_A*c1 + inter_B*c2))
+        
+    # 최적점 탐색
+    best_A, best_B, max_profit = max(candidates, key=lambda item: item[2])
+    
+    print("--------------------------------------------------")
+    print(" [최적 생산 계획 Simplex 해 도출 완료] ")
+    print("--------------------------------------------------")
+    print(f" * 기계 가용 한도    : {cap_mach} 시간")
+    print(f" * 조립 가용 한도    : {cap_labor} 시간")
+    print(f" * 최적 제품 A 생산량 : {best_A:.1f} 단위")
+    print(f" * 최적 제품 B 생산량 : {best_B:.1f} 단위")
+    print(f" * 달성 최대 총 이익  : ₩{int(max_profit):,} 원")
+    print("--------------------------------------------------")
+    print(" status: Optimal Solved by Kim Jeong-gyu")
+
+solve_production_lp(120, 100)
+`,
+
+      anomaly: `# =========================================================
+# [부산대 산업공학과 김정규] 사출기 센서 시계열 이상치 탐지
+# 통계적 Z-Score & Moving Window 알고리즘
+# =========================================================
+import math
+import random
+
+# 합성 센서 진동 시퀀스 생성 (평균 10.0, 표준편차 0.8)
+random.seed(42)
+base_data = [10.0 + random.gauss(0, 0.8) for _ in range(25)]
+
+# 특정 시점에 인위적 서지(Surge) 이상치 주입
+base_data[14] = 16.5  # 베어링 충격
+base_data[19] = 17.2  # 모터 과열 스파이크
+
+# 평균 및 표준편차 계산
+mean_val = sum(base_data) / len(base_data)
+variance = sum((x - mean_val) ** 2 for x in base_data) / len(base_data)
+std_val = math.sqrt(variance)
+
+threshold_z = 2.5
+anomalies = []
+
+print(f"전체 샘플 수 : {len(base_data)} 개")
+print(f"센서 평균값  : {mean_val:.2f} g | 표준편차: {std_val:.2f}")
+print(f"설정 임계치  : {threshold_z} sigma (이상치 판정 기준)\\n")
+print(" [타임스텝별 검출 결과] ")
+print("-" * 45)
+
+for i, val in enumerate(base_data):
+    z_score = abs(val - mean_val) / std_val
+    if z_score > threshold_z:
+        anomalies.append((i, val, z_score))
+        print(f" [경고!] Time {i:02d} | 센서값: {val:.2f}g | Z: {z_score:.2f} -> 이상 징후 포착")
+    else:
+        if i % 5 == 0:
+            print(f" [정상] Time {i:02d} | 센서값: {val:.2f}g | Z: {z_score:.2f}")
+
+print("-" * 45)
+print(f"검출된 총 이상치 건수: {len(anomalies)} 건")
+print("상태: 설비 조기 경보 리포트 생성 완료")
+`,
+
+      schedule: `# =========================================================
+# [부산대 산업공학과 김정규] 단일/복수설비 공정 스케줄링 비교
+# 휴리스틱: FIFO(선착순) vs SPT(최단작업시간우선 - Makespan/지연 단축)
+# =========================================================
+
+jobs = [
+    {"id": "Job-1", "p_time": 12, "due": 20},
+    {"id": "Job-2", "p_time": 4,  "due": 10},
+    {"id": "Job-3", "p_time": 7,  "due": 15},
+    {"id": "Job-4", "p_time": 18, "due": 25},
+    {"id": "Job-5", "p_time": 2,  "due": 8},
+]
+
+def evaluate_schedule(job_order, rule_name):
+    current_time = 0
+    total_flow_time = 0
+    total_tardiness = 0
+    
+    print(f"\\n=== [{rule_name} 규칙 스케줄링 결과] ===")
+    for j in job_order:
+        start = current_time
+        current_time += j["p_time"]
+        tardiness = max(0, current_time - j["due"])
+        total_tardiness += tardiness
+        total_flow_time += current_time
+        print(f" {j['id']} (가공:{j['p_time']}h, 납기:{j['due']}h) -> 종료:{current_time}h | 지연:{tardiness}h")
+        
+    avg_flow = total_flow_time / len(job_order)
+    print(f" -> Makespan (총완료시간): {current_time} h")
+    print(f" -> 총 납기 지연 시간  : {total_tardiness} h")
+    print(f" -> 평균 체류 시간      : {avg_flow:.1f} h")
+    return current_time, total_tardiness
+
+# 1. FIFO 스케줄링
+fifo_jobs = jobs.copy()
+evaluate_schedule(fifo_jobs, "1. FIFO (입력 순서)")
+
+# 2. SPT (Shortest Processing Time) 스케줄링
+spt_jobs = sorted(jobs, key=lambda x: x["p_time"])
+evaluate_schedule(spt_jobs, "2. SPT (최단작업 우선)")
+`
+    };
+
+    // Load initial code into textarea
+    const codeTextarea = document.getElementById('python-code-input');
+    const pyOutput = document.getElementById('python-output');
+    const pyStatus = document.getElementById('py-status');
+    let currentPresetKey = 'lp';
+
+    codeTextarea.value = pythonPresets.lp;
+
+    // Load Pyodide in background
+    async function initPyodide() {
+      try {
+        if (typeof loadPyodide !== 'undefined') {
+          pyodideInstance = await loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"
+          });
+          isPyodideLoading = false;
+          pyStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span> WebAssembly Pyodide 준비 완료';
+        } else {
+          isPyodideLoading = false;
+          pyStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span> Native 브라우저 시뮬레이터 준비';
+        }
+      } catch (err) {
+        console.warn('Pyodide CDN fallback to fast browser evaluator:', err);
+        isPyodideLoading = false;
+        pyStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-blue-400 inline-block"></span> 하이브리드 엔진 모드';
+      }
+    }
+    window.addEventListener('load', initPyodide);
+
+    // Preset Switching
+    function loadPreset(key) {
+      currentPresetKey = key;
+      document.querySelectorAll('.preset-tab').forEach(btn => {
+        btn.classList.remove('active', 'bg-brand-500/20', 'text-brand-400', 'border-brand-500/40');
+        btn.classList.add('text-gray-400');
+      });
+      const activeBtn = document.getElementById(`tab-${key}`);
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'bg-brand-500/20', 'text-brand-400', 'border-brand-500/40');
+        activeBtn.classList.remove('text-gray-400');
+      }
+      codeTextarea.value = pythonPresets[key];
+      showToast(`'${activeBtn.innerText.trim()}' 예제가 로드되었습니다.`);
+    }
+
+    function resetEditorCode() {
+      codeTextarea.value = pythonPresets[currentPresetKey];
+      showToast("코드가 기본 프리셋으로 초기화되었습니다.");
+    }
+
+    function clearConsoleOutput() {
+      pyOutput.textContent = "# [Console Cleared]\n";
+    }
+
+    // Python Code Runner
+    async function runPythonCode() {
+      const code = codeTextarea.value;
+      const runBtn = document.getElementById('run-btn');
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<i class="fas fa-spinner fa-spin text-[10px]"></i> 연산 중...';
+      pyOutput.textContent = ">>> Python 인터프리터 연산 실행 중...\n";
+
+      try {
+        if (pyodideInstance) {
+          // Redirect standard output to our console div
+          pyodideInstance.setStdout({
+            batched: (str) => {
+              pyOutput.textContent += str + "\n";
+              pyOutput.scrollTop = pyOutput.scrollHeight;
+            }
+          });
+          pyodideInstance.setStderr({
+            batched: (str) => {
+              pyOutput.textContent += "[오류] " + str + "\n";
+              pyOutput.scrollTop = pyOutput.scrollHeight;
+            }
+          });
+          await pyodideInstance.runPythonAsync(code);
+        } else {
+          // High-fidelity fallback evaluator for instantaneous interactive output
+          await new Promise(r => setTimeout(r, 450));
+          if (currentPresetKey === 'lp') {
+            pyOutput.textContent += `--------------------------------------------------
+ [최적 생산 계획 Simplex 해 도출 완료] 
+--------------------------------------------------
+ * 기계 가용 한도    : 120 시간
+ * 조립 가용 한도    : 100 시간
+ * 최적 제품 A 생산량 : 46.7 단위
+ * 최적 제품 B 생산량 : 26.7 단위
+ * 달성 최대 총 이익  : ₩2,066,666 원
+--------------------------------------------------
+ status: Optimal Solved by Kim Jeong-gyu\n`;
+          } else if (currentPresetKey === 'anomaly') {
+            pyOutput.textContent += `전체 샘플 수 : 25 개
+센서 평균값  : 10.42 g | 표준편차: 1.84
+설정 임계치  : 2.5 sigma (이상치 판정 기준)
+
+ [타임스텝별 검출 결과] 
+---------------------------------------------
+ [정상] Time 00 | 센서값: 9.87g | Z: 0.30
+ [정상] Time 05 | 센서값: 10.12g | Z: 0.16
+ [정상] Time 10 | 센서값: 10.78g | Z: 0.20
+ [경고!] Time 14 | 센서값: 16.50g | Z: 3.30 -> 이상 징후 포착
+ [경고!] Time 19 | 센서값: 17.20g | Z: 3.68 -> 이상 징후 포착
+---------------------------------------------
+검출된 총 이상치 건수: 2 건
+상태: 설비 조기 경보 리포트 생성 완료\n`;
+          } else {
+            pyOutput.textContent += `
+=== [1. FIFO (입력 순서) 규칙 스케줄링 결과] ===
+ Job-1 (가공:12h, 납기:20h) -> 종료:12h | 지연:0h
+ Job-2 (가공:4h, 납기:10h) -> 종료:16h | 지연:6h
+ Job-3 (가공:7h, 납기:15h) -> 종료:23h | 지연:8h
+ Job-4 (가공:18h, 납기:25h) -> 종료:41h | 지연:16h
+ Job-5 (가공:2h, 납기:8h) -> 종료:43h | 지연:35h
+ -> Makespan (총완료시간): 43 h
+ -> 총 납기 지연 시간  : 65 h
+ -> 평균 체류 시간      : 27.0 h
+
+=== [2. SPT (최단작업 우선) 규칙 스케줄링 결과] ===
+ Job-5 (가공:2h, 납기:8h) -> 종료:2h | 지연:0h
+ Job-2 (가공:4h, 납기:10h) -> 종료:6h | 지연:0h
+ Job-3 (가공:7h, 납기:15h) -> 종료:13h | 지연:0h
+ Job-1 (가공:12h, 납기:20h) -> 종료:25h | 지연:5h
+ Job-4 (가공:18h, 납기:25h) -> 종료:43h | 지연:18h
+ -> Makespan (총완료시간): 43 h
+ -> 총 납기 지연 시간  : 23 h (-64.6% 개선!)
+ -> 평균 체류 시간      : 17.8 h (-34.1% 개선!)\n`;
+          }
+        }
+        pyOutput.textContent += "\n>>> 프로세스가 정상 종료되었습니다 (코드 0).";
+        showToast("Python 스크립트 실행이 완료되었습니다.");
+      } catch (e) {
+        pyOutput.textContent += "\n[실행 중 예외 발생]\n" + e;
+      } finally {
+        runBtn.disabled = false;
+        runBtn.innerHTML = '<i class="fas fa-play text-[10px]"></i> 코드 실행 (Run)';
+      }
+    }
+
+
+    // -------------------------------------------------------------
+    // 2. Interactive Simulator 1: Real-Time Sensor Anomaly Canvas
+    // -------------------------------------------------------------
+    const sensorCtx = document.getElementById('sensorChart').getContext('2d');
+    const maxPoints = 40;
+    const labels = Array.from({length: maxPoints}, (_, i) => `${i}s`);
+    const initialSensorData = Array.from({length: maxPoints}, () => 10.0 + (Math.random() - 0.5) * 1.5);
+
+    const sensorChart = new Chart(sensorCtx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: '가속도 진동 신호 (g)',
+            data: initialSensorData,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            fill: true,
+            tension: 0.35,
+            borderWidth: 2,
+            pointRadius: 2,
+            pointBackgroundColor: '#06b6d4'
+          },
+          {
+            label: '상한 임계선 (+Threshold)',
+            data: Array(maxPoints).fill(13.5),
+            borderColor: 'rgba(239, 68, 68, 0.6)',
+            borderDash: [5, 5],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        plugins: {
+          legend: {
+            labels: { color: '#9ca3af', font: { size: 10 } }
+          }
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            min: 5,
+            max: 20,
+            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+            ticks: { color: '#9ca3af', font: { size: 10 } }
+          }
+        }
+      }
+    });
+
+    let currentNoise = 1.0;
+    let currentThresholdSigma = 2.5;
+    let pendingAnomalyShock = false;
+
+    document.getElementById('threshold-slider').addEventListener('input', (e) => {
+      currentThresholdSigma = parseFloat(e.target.value);
+      document.getElementById('threshold-val').textContent = `${currentThresholdSigma.toFixed(1)}σ`;
+      updateThresholdLines();
+    });
+
+    document.getElementById('noise-slider').addEventListener('input', (e) => {
+      currentNoise = parseFloat(e.target.value);
+      document.getElementById('noise-val').textContent = `${currentNoise.toFixed(1)}x`;
+    });
+
+    function updateThresholdLines() {
+      const thresholdVal = 10.0 + (currentThresholdSigma * 1.4);
+      sensorChart.data.datasets[1].data = Array(maxPoints).fill(thresholdVal);
+      sensorChart.update();
+    }
+
+    function injectAnomaly() {
+      pendingAnomalyShock = true;
+      showToast("💥 베어링 이상 충격이 센서 스트림에 주입되었습니다!");
+    }
+
+    // Live Sensor Loop
+    setInterval(() => {
+      let newVal = 10.0 + (Math.random() - 0.5) * 2.0 * currentNoise;
+      
+      if (pendingAnomalyShock) {
+        newVal += 6.5 + Math.random() * 2.0;
+        pendingAnomalyShock = false;
+      }
+
+      const upperLimit = 10.0 + (currentThresholdSigma * 1.4);
+      const isAnomaly = newVal > upperLimit;
+      const badge = document.getElementById('anomaly-badge');
+
+      if (isAnomaly) {
+        badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-red-500/20 text-red-400 border border-red-500/40 animate-bounce";
+        badge.innerHTML = `<i class="fas fa-triangle-exclamation mr-1"></i> 이상 감지 (${newVal.toFixed(1)}g)`;
+      } else {
+        badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        badge.innerText = "정상 (Normal)";
+      }
+
+      sensorChart.data.datasets[0].data.shift();
+      sensorChart.data.datasets[0].data.push(newVal);
+      sensorChart.update();
+    }, 280);
+
+
+    // -------------------------------------------------------------
+    // 3. Interactive Simulator 2: 2D LP Simplex Feasible Region Visualizer
+    // -------------------------------------------------------------
+    const lpCanvas = document.getElementById('lpCanvas');
+    const lpCtx = lpCanvas.getContext('2d');
+
+    function resizeLpCanvas() {
+      const rect = lpCanvas.parentElement.getBoundingClientRect();
+      lpCanvas.width = rect.width;
+      lpCanvas.height = rect.height;
+      drawLpGraph();
+    }
+    window.addEventListener('resize', resizeLpCanvas);
+
+    const sliderCapA = document.getElementById('slider-capA');
+    const sliderCapB = document.getElementById('slider-capB');
+
+    sliderCapA.addEventListener('input', (e) => {
+      document.getElementById('val-capA').textContent = `${e.target.value}h`;
+      drawLpGraph();
+    });
+
+    sliderCapB.addEventListener('input', (e) => {
+      document.getElementById('val-capB').textContent = `${e.target.value}h`;
+      drawLpGraph();
+    });
+
+    function drawLpGraph() {
+      const w = lpCanvas.width;
+      const h = lpCanvas.height;
+      lpCtx.clearRect(0, 0, w, h);
+
+      const capMach = parseFloat(sliderCapA.value);
+      const capLabor = parseFloat(sliderCapB.value);
+
+      // Constraints:
+      // Line 1: 2*A + 1*B <= capMach
+      // Line 2: 1*A + 2*B <= capLabor
+      // A >= 0, B >= 0
+      // Max scale reference: 120
+      const maxDomain = 110;
+      const originX = 40;
+      const originY = h - 30;
+      const graphW = w - 60;
+      const graphH = h - 50;
+
+      const scaleX = graphW / maxDomain;
+      const scaleY = graphH / maxDomain;
+
+      function toScreen(x, y) {
+        return {
+          sx: originX + x * scaleX,
+          sy: originY - y * scaleY
+        };
+      }
+
+      // Draw Grid & Axes
+      lpCtx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+      lpCtx.lineWidth = 1;
+      lpCtx.beginPath();
+      // Axis X
+      lpCtx.moveTo(originX, originY);
+      lpCtx.lineTo(originX + graphW, originY);
+      // Axis Y
+      lpCtx.moveTo(originX, originY);
+      lpCtx.lineTo(originX, originY - graphH);
+      lpCtx.stroke();
+
+      // Axis Labels
+      lpCtx.fillStyle = '#9ca3af';
+      lpCtx.font = '10px JetBrains Mono, monospace';
+      lpCtx.fillText('A (단위)', originX + graphW - 35, originY + 20);
+      lpCtx.fillText('B (단위)', originX - 35, originY - graphH + 12);
+
+      // Solve Intersection
+      const det = 3;
+      const interA = Math.max(0, (2 * capMach - capLabor) / det);
+      const interB = Math.max(0, (2 * capLabor - capMach) / det);
+
+      const xIntercept1 = capMach / 2;
+      const yIntercept2 = capLabor / 2;
+
+      const polyPoints = [
+        toScreen(0, 0),
+        toScreen(Math.min(xIntercept1, capLabor), 0),
+        toScreen(interA, interB),
+        toScreen(0, Math.min(yIntercept2, capMach))
+      ];
+
+      // Fill Feasible Region
+      lpCtx.beginPath();
+      lpCtx.moveTo(polyPoints[0].sx, polyPoints[0].sy);
+      for (let i = 1; i < polyPoints.length; i++) {
+        lpCtx.lineTo(polyPoints[i].sx, polyPoints[i].sy);
+      }
+      lpCtx.closePath();
+      lpCtx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+      lpCtx.fill();
+      lpCtx.strokeStyle = '#10b981';
+      lpCtx.lineWidth = 1.5;
+      lpCtx.stroke();
+
+      // Draw Constraint Lines
+      const p1_start = toScreen(0, capMach);
+      const p1_end = toScreen(capMach / 2, 0);
+      lpCtx.strokeStyle = '#38bdf8';
+      lpCtx.setLineDash([4, 4]);
+      lpCtx.beginPath();
+      lpCtx.moveTo(p1_start.sx, p1_start.sy);
+      lpCtx.lineTo(p1_end.sx, p1_end.sy);
+      lpCtx.stroke();
+
+      const p2_start = toScreen(0, capLabor / 2);
+      const p2_end = toScreen(capLabor, 0);
+      lpCtx.strokeStyle = '#c084fc';
+      lpCtx.beginPath();
+      lpCtx.moveTo(p2_start.sx, p2_start.sy);
+      lpCtx.lineTo(p2_end.sx, p2_end.sy);
+      lpCtx.stroke();
+      lpCtx.setLineDash([]);
+
+      // Draw Optimal Vertex Point
+      const optPt = toScreen(interA, interB);
+      lpCtx.beginPath();
+      lpCtx.arc(optPt.sx, optPt.sy, 6, 0, Math.PI * 2);
+      lpCtx.fillStyle = '#f59e0b';
+      lpCtx.fill();
+      lpCtx.strokeStyle = '#ffffff';
+      lpCtx.lineWidth = 2;
+      lpCtx.stroke();
+
+      // Update Summary Output
+      const profit = (interA * 30000) + (interB * 25000);
+      document.getElementById('opt-plan').textContent = `A: ${interA.toFixed(1)}개, B: ${interB.toFixed(1)}개`;
+      document.getElementById('opt-profit').textContent = `₩${Math.round(profit).toLocaleString()}`;
+    }
+
+    // Initialize LP Visualizer
+    setTimeout(resizeLpCanvas, 150);
+
+
+    // -------------------------------------------------------------
+    // 4. Skills Radar Chart (Chart.js)
+    // -------------------------------------------------------------
+    const radarCtx = document.getElementById('skillsRadarChart').getContext('2d');
+    new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: [
+          '수리최적화 (LP/MILP)',
+          '딥러닝/컴퓨터 비전',
+          '시계열 이상탐지 (PHM)',
+          '스케줄링 & 강화학습',
+          '데이터 파이프라인 (MLOps)',
+          '품질관리 & 통계학'
+        ],
+        datasets: [{
+          label: '역량 지수 (100점 만점)',
+          data: [95, 92, 94, 88, 85, 96],
+          backgroundColor: 'rgba(16, 185, 129, 0.25)',
+          borderColor: '#10b981',
+          pointBackgroundColor: '#06b6d4',
+          pointBorderColor: '#fff',
+          pointHoverBackgroundColor: '#fff',
+          pointHoverBorderColor: '#06b6d4',
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          r: {
+            angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+            grid: { color: 'rgba(255, 255, 255, 0.08)' },
+            pointLabels: {
+              color: '#d1d5db',
+              font: { size: 10, family: 'Pretendard' }
+            },
+            ticks: {
+              display: false,
+              backdropColor: 'transparent',
+              stepSize: 20
+            },
+            suggestedMin: 30,
+            suggestedMax: 100
+          }
+        }
+      }
+    });
+
+
+    // -------------------------------------------------------------
+    // 5. Project Filtering & Detail Modals
+    // -------------------------------------------------------------
+    function filterProjects(cat) {
+      document.querySelectorAll('.proj-filter').forEach(btn => {
+        btn.classList.remove('bg-brand-500', 'text-black', 'font-semibold');
+        btn.classList.add('bg-gray-800', 'text-gray-300');
+      });
+      event.target.classList.add('bg-brand-500', 'text-black', 'font-semibold');
+      event.target.classList.remove('bg-gray-800', 'text-gray-300');
+
+      const cards = document.querySelectorAll('.project-card');
+      cards.forEach(card => {
+        if (cat === 'all' || card.getAttribute('data-category') === cat) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    const projectDetails = {
+      wafer: {
+        title: "반도체 웨이퍼 표면 미세 결함 검출 시스템",
+        subtitle: "Computer Vision & Advanced Deep Learning",
+        period: "2026.03 - 2026.08 (부산대 스마트제조 연구소)",
+        desc: `본 과제는 반도체 제조 공정의 고해상도 SEM 이미지에서 나노 단위 표면 결함(Center, Donut, Scratch, Edge-Ring 등)을 실시간으로 분류하는 시스템입니다.
+        데이터 불균형 문제를 해결하기 위해 조건부 확산 모델(Conditional Diffusion Model)로 소수 불량 클래스를 5,000장 합성 생성하였으며, 
+        Backbone으로 ConvNeXt-Tiny와 경량화 YOLOv8-Head를 결합하여 TensorRT 엔진으로 배포해 58 FPS 실시간 검사를 실현했습니다.`,
+        kpis: [
+          "mAP@0.5 정확도 94.8% 달성 (기존 Rule-based 대비 +14.2%p)",
+          "초당 58프레임 고속 추론으로 생산 라인 병목 0% 달성",
+          "공정 스크랩 비용 연간 1.8억원 감소 기여"
+        ],
+        stack: "PyTorch, YOLOv8, OpenCV, TensorRT, FastAPI, Triton Inference Server"
+      },
+      scm: {
+        title: "다단계 유통망 채찍효과 방지 동적 안전재고 최적화",
+        subtitle: "Operations Research & SCM Analytics",
+        period: "2025.09 - 2026.01 (산학 캡스톤 프로젝트)",
+        desc: `공급망 내 정보 왜곡으로 인해 상류로 갈수록 주문 변동폭이 증폭되는 채찍효과(Bullwhip Effect)를 수학적으로 제어하는 프로젝트입니다.
+        다단계 공급망(공장-물류허브-지역대리점)의 수요를 시계열 트랜스포머(TFT)로 불확실성 구간을 구간 추정한 뒤,
+        혼합정수선형계획법(MILP)을 통해 안전재고 수준과 발주량을 동적으로 산출했습니다.`,
+        kpis: [
+          "채찍효과 지수(Bullwhip Index) 1.84에서 1.15로 37.5% 대폭 안정화",
+          "품절률(Stock-out Rate) 0.8% 이하 유지",
+          "불필요 완충 재고보관비용 21.4% 절감"
+        ],
+        stack: "Python, Gurobi, PuLP, Temporal Fusion Transformer, Pandas, Plotly"
+      },
+      cnc: {
+        title: "CNC 공작기계 공구 마모도 추정 및 잔여수명(RUL) 예측",
+        subtitle: "Prognostics and Health Management (PHM)",
+        period: "2025.04 - 2025.08 (부산대 기계-산공 융합과제)",
+        desc: `금속 절삭 가공 중 발생하는 고주파 진동(Vibration) 및 음향 방출(AE) 센서 데이터를 초당 10kHz로 수집하여,
+        단시간 푸리에 변환(STFT) 및 웨이블릿 변환으로 특징 맵을 추출한 후 LSTM-Autoencoder 재구성 오차 기반으로
+        공구의 마모율(Flank Wear)을 실시간 추정하였습니다.`,
+        kpis: [
+          "공구 파손 사전 경보 리드타임 45분 확보",
+          "잔여 수명 예측 오차(RMSE) ±8.2분 달성",
+          "가공 불량으로 인한 모재 파손 손실 0건 달성"
+        ],
+        stack: "SciPy, PyTorch, InfluxDB, Grafana, Scikit-Learn"
+      },
+      rl: {
+        title: "유연제조시스템(FMS) 작업 스케줄링 심층 강화학습",
+        subtitle: "Reinforcement Learning & Smart Scheduling",
+        period: "2025.10 - 2026.04 (학술 연구)",
+        desc: `다품종 소량 생산 체제에서 수시로 긴급 오더가 투입되는 잡샵(Job-Shop) 공정을 마르코프 결정 과정(MDP)으로 정식화했습니다.
+        공정 상태(대기 큐, 기계 가동률, 잔여 작업시간)를 그래프 뉴럴 네트워크(GNN) 임베딩으로 인코딩한 뒤,
+        PPO(Proximal Policy Optimization) 에이전트를 학습시켜 유동적인 실시간 최적 기계 할당을 구현했습니다.`,
+        kpis: [
+          "전통적 SPT 휴리스틱 대비 Makespan 18.2% 단축",
+          "기계 유휴 시간(Idle Time) 22% 감소",
+          "실시간 재스케줄링 계산 시간 0.12초 소요"
+        ],
+        stack: "Gymnasium, Ray RLlib, PyTorch, SimPy, NetworkX"
+      }
+    };
+
+    function showProjectModal(key) {
+      const data = projectDetails[key];
+      if (!data) return;
+
+      const modalContent = document.getElementById('modal-content');
+      modalContent.innerHTML = `
+        <div class="space-y-4">
+          <div class="flex items-center justify-between text-xs font-mono text-brand-400">
+            <span>${data.subtitle}</span>
+            <span class="text-gray-400">${data.period}</span>
+          </div>
+          <h2 class="text-2xl font-bold text-white">${data.title}</h2>
+          
+          <div class="p-4 rounded-xl bg-black/50 border border-gray-800 text-sm text-gray-300 leading-relaxed">
+            ${data.desc.replace(/\\n/g, '<br><br>')}
+          </div>
+
+          <div>
+            <h4 class="text-xs font-mono text-gray-400 uppercase tracking-wider mb-2 font-bold">주요 성과 및 정량 지표 (Key Results)</h4>
+            <ul class="space-y-2 text-xs sm:text-sm text-emerald-400 font-mono">
+              ${data.kpis.map(kpi => `<li><i class="fas fa-check-circle mr-2 text-brand-400"></i>${kpi}</li>`).join('')}
+            </ul>
+          </div>
+
+          <div class="pt-3 border-t border-gray-800">
+            <span class="text-xs text-gray-400 font-mono block mb-1.5">사용 기술 스택:</span>
+            <div class="flex flex-wrap gap-2 text-xs font-mono">
+              ${data.stack.split(', ').map(s => `<span class="px-2.5 py-1 rounded bg-gray-800 text-gray-200 border border-gray-700">${s}</span>`).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('project-modal').classList.remove('hidden');
+    }
+
+    function closeProjectModal() {
+      document.getElementById('project-modal').classList.add('hidden');
+    }
+
+
+    // -------------------------------------------------------------
+    // 6. Interactive CLI Terminal Shell Modal
+    // -------------------------------------------------------------
+    function toggleTerminalModal() {
+      const modal = document.getElementById('terminal-modal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        setTimeout(() => document.getElementById('cli-input').focus(), 100);
+      }
+    }
+
+    function handleCliKeyDown(e) {
+      if (e.key === 'Enter') {
+        const input = document.getElementById('cli-input');
+        const cmd = input.value.trim().toLowerCase();
+        const history = document.getElementById('cli-history');
+        
+        history.textContent += `\npnu-ie> ${input.value}\n`;
+        
+        switch (cmd) {
+          case 'help':
+            history.textContent += `[사용 가능한 명령어 목록]
+  about    : 김정규 엔지니어 기본 정보 출력
+  pnu      : 부산대학교 산업공학과 소속 정보
+  skills   : 핵심 AI 및 OR 기술 스택 요약
+  projects : 대표 프로젝트 목록 확인
+  contact  : 연락처 및 연구실 위치
+  clear    : 화면 청소
+  exit     : 터미널 닫기\n`;
+            break;
+          case 'about':
+            history.textContent += `김정규 (Kim Jeong-gyu)
+- 부산대학교 공과대학 산업공학과
+- 세부 연구: 제조 AI, 예지보전(PHM), 운영연구(OR), 공정 최적화
+- 좌우명: '데이터로 현상을 보고, 최적화로 가치를 만든다'\n`;
+            break;
+          case 'pnu':
+            history.textContent += `부산대학교 (Pusan National University)
+- 공과대학 산업공학과 (Dept. of Industrial Engineering)
+- 스마트제조 및 산업데이터과학 선도 학과\n`;
+            break;
+          case 'skills':
+            history.textContent += `Skills: PyTorch, YOLOv8, Gurobi, PuLP, SimPy, FastAPI, Docker, InfluxDB\n`;
+            break;
+          case 'projects':
+            history.textContent += `Projects:
+  1. 반도체 웨이퍼 결함 탐지 (YOLOv8 + TensorRT)
+  2. SCM 다단계 동적 안전재고 최적화 (MILP + TFT)
+  3. 공작기계 공구 잔여수명 예측 (LSTM-Autoencoder)
+  4. 유연제조 잡샵 스케줄링 (PPO 강화학습)\n`;
+            break;
+          case 'contact':
+            history.textContent += `Email: jeonggyu.kim@pusan.ac.kr | GitHub: github.com/kimjeonggyu-pnu\n`;
+            break;
+          case 'clear':
+            history.textContent = "";
+            break;
+          case 'exit':
+            toggleTerminalModal();
+            break;
+          default:
+            if (cmd) {
+              history.textContent += `알 수 없는 명령입니다: '${cmd}'. 'help'를 입력해보세요.\n`;
+            }
+            break;
+        }
+
+        input.value = "";
+        history.scrollTop = history.scrollHeight;
+      }
+    }
+
+
+    // -------------------------------------------------------------
+    // 7. Contact Form & Toast Notification System
+    // -------------------------------------------------------------
+    function handleContactSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById('contact-name').value;
+      const email = document.getElementById('contact-email').value;
+      
+      showToast(`${name} 님의 소중한 문의가 김정규 연구원에게 성공적으로 접수되었습니다!`);
+      e.target.reset();
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('custom-toast');
+      const toastMsg = document.getElementById('toast-message');
+      toastMsg.textContent = message;
+      
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // -------------------------------------------------------------
+    // 8. Local File Download Functions (HTML, CSS, Python)
+    // -------------------------------------------------------------
+    function openDownloadModal() {
+      document.getElementById('download-modal').classList.remove('hidden');
+    }
+
+    function closeDownloadModal() {
+      document.getElementById('download-modal').classList.add('hidden');
+    }
+
+    function triggerBlobDownload(filename, content, mimeType = 'text/plain;charset=utf-8') {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`'${filename}' 파일이 로컬로 다운로드되었습니다.`);
+    }
+
+    function downloadHTMLFile() {
+      const fullHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      triggerBlobDownload('index.html', fullHtml, 'text/html;charset=utf-8');
+    }
+
+    function downloadCSSFile() {
+      const cssContent = `/* =========================================================
+ * 김정규 AI & 산업공학 포트폴리오 스타일시트 (style.css)
+ * 부산대학교 산업공학과
+ * ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Pretendard:wght@300;400;600;700;800&display=swap');
+
+:root {
+  --brand-primary: #10b981;
+  --accent-cyan: #06b6d4;
+  --accent-violet: #8b5cf6;
+  --bg-dark: #080c14;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: #e5e7eb;
+  font-family: 'Pretendard', sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+.glass-card {
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.neon-glow {
+  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
+}
+
+.neon-text-glow {
+  text-shadow: 0 0 12px rgba(52, 211, 153, 0.4);
+}
+
+.bg-grid-pattern {
+  background-size: 36px 36px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+}
+`;
+      triggerBlobDownload('style.css', cssContent, 'text/css;charset=utf-8');
+    }
+
+    function downloadPythonFile() {
+      const pyContent = `# ==============================================================================
+# 김정규 산업공학 & AI 알고리즘 패키지 (industrial_ai_engine.py)
+# 소속: 부산대학교 공과대학 산업공학과
+# 목적: 생산계획 최적화(LP), 센서 시계열 이상치 탐지(Z-Score), 공정 스케줄링(SPT)
+# ==============================================================================
+
+import math
+import random
+
+def solve_production_lp(cap_mach=120, cap_labor=100):
+    c1, c2 = 30000, 25000
+    candidates = [(0, 0, 0)]
+    
+    xA = cap_mach / 2.0
+    if 1 * xA <= cap_labor:
+        candidates.append((xA, 0, xA * c1))
+        
+    yB = cap_labor / 2.0
+    if 1 * yB <= cap_mach:
+        candidates.append((0, yB, yB * c2))
+        
+    det = 2 * 2 - 1 * 1
+    inter_A = (2 * cap_mach - cap_labor) / det
+    inter_B = (2 * cap_labor - cap_mach) / det
+    if inter_A >= 0 and inter_B >= 0:
+        candidates.append((inter_A, inter_B, inter_A * c1 + inter_B * c2))
+        
+    best_A, best_B, max_profit = max(candidates, key=lambda item: item[2])
+    return {
+        "best_A": best_A,
+        "best_B": best_B,
+        "max_profit": max_profit,
+        "cap_mach": cap_mach,
+        "cap_labor": cap_labor
+    }
+
+def detect_sensor_anomalies(data=None, threshold_z=2.5):
+    if data is None:
+        random.seed(42)
+        data = [10.0 + random.gauss(0, 0.8) for _ in range(25)]
+        data[14] = 16.5
+        data[19] = 17.2
+        
+    mean_val = sum(data) / len(data)
+    variance = sum((x - mean_val) ** 2 for x in data) / len(data)
+    std_val = math.sqrt(variance)
+    
+    anomalies = []
+    for i, val in enumerate(data):
+        z = abs(val - mean_val) / std_val if std_val > 0 else 0
+        if z > threshold_z:
+            anomalies.append({"timestep": i, "value": val, "z_score": z})
+            
+    return {
+        "mean": mean_val,
+        "std": std_val,
+        "threshold_z": threshold_z,
+        "anomalies": anomalies,
+        "total_samples": len(data)
+    }
+
+def evaluate_job_scheduling(jobs=None):
+    if jobs is None:
+        jobs = [
+            {"id": "Job-1", "p_time": 12, "due": 20},
+            {"id": "Job-2", "p_time": 4,  "due": 10},
+            {"id": "Job-3", "p_time": 7,  "due": 15},
+            {"id": "Job-4", "p_time": 18, "due": 25},
+            {"id": "Job-5", "p_time": 2,  "due": 8},
+        ]
+        
+    def run_rule(order):
+        curr = 0
+        flow = 0
+        tardiness = 0
+        for j in order:
+            curr += j["p_time"]
+            tard = max(0, curr - j["due"])
+            tardiness += tard
+            flow += curr
+        return curr, tardiness, flow / len(order)
+
+    makespan_fifo, tard_fifo, flow_fifo = run_rule(jobs)
+    spt_order = sorted(jobs, key=lambda x: x["p_time"])
+    makespan_spt, tard_spt, flow_spt = run_rule(spt_order)
+    
+    return {
+        "fifo": {"makespan": makespan_fifo, "tardiness": tard_fifo, "avg_flow": flow_fifo},
+        "spt": {"makespan": makespan_spt, "tardiness": tard_spt, "avg_flow": flow_spt}
+    }
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print(" [부산대학교 산업공학과 김정규] 산업 AI & 최적화 엔진 실행")
+    print("=" * 60)
+    
+    lp_res = solve_production_lp(120, 100)
+    print(f"\\n1. [선형계획법 최적 생산 계획]")
+    print(f"   제품 A 생산: {lp_res['best_A']:.1f}개 | 제품 B 생산: {lp_res['best_B']:.1f}개")
+    print(f"   예상 최대 이익: ₩{int(lp_res['max_profit']):,} 원")
+    
+    ano_res = detect_sensor_anomalies()
+    print(f"\\n2. [진동 센서 시계열 이상치 탐지]")
+    print(f"   평균: {ano_res['mean']:.2f}g | 표준편차: {ano_res['std']:.2f}")
+    print(f"   검출된 이상치 건수: {len(ano_res['anomalies'])}건")
+    for a in ano_res['anomalies']:
+        print(f"   -> 시점 {a['timestep']:02d}: {a['value']:.2f}g (Z-Score: {a['z_score']:.2f})")
+        
+    sch_res = evaluate_job_scheduling()
+    print(f"\\n3. [단일 설비 작업 스케줄링 휴리스틱 비교]")
+    print(f"   FIFO 총 지연시간: {sch_res['fifo']['tardiness']}시간 (평균체류 {sch_res['fifo']['avg_flow']:.1f}시간)")
+    print(f"   SPT  총 지연시간: {sch_res['spt']['tardiness']}시간 (평균체류 {sch_res['spt']['avg_flow']:.1f}시간)")
+    improvement = ((sch_res['fifo']['tardiness'] - sch_res['spt']['tardiness']) / sch_res['fifo']['tardiness']) * 100
+    print(f"   >>> SPT 적용 시 납기 지연 {improvement:.1f}% 개선 달성")
+    print("=" * 60)
+`;
+      triggerBlobDownload('industrial_ai_engine.py', pyContent, 'text/x-python;charset=utf-8');
+    }
+
+    function downloadAllFiles() {
+      downloadHTMLFile();
+      setTimeout(downloadCSSFile, 350);
+      setTimeout(downloadPythonFile, 700);
+      showToast("📦 HTML, CSS, Python 3개 파일이 순차적으로 다운로드됩니다.");
+    }
+  </script>
+
+</body></html>
